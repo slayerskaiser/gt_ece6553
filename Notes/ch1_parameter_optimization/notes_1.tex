@@ -11,7 +11,7 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,patterns,calc}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.13}
+\pgfplotsset{compat=1.9}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -635,7 +635,7 @@ To solve, assume different constraints are active/inactive:
       u_2 = 2 \\
       \lambda_1 = 1
     \end{cases} \]
-  \begin{enumerate}[label=$\square$\hspace{1pt}\llap{\raisebox{2pt}{$\checkmark$}}]
+  \begin{enumerate}[label=$\square$\hspace{1pt}\llap{\protect\raisebox{2pt}{$\checkmark$}}]
   \item $\lambda_1 \ge 0$
   \item $3\cdot 1 + 2 \le 6$
   \end{enumerate}
@@ -667,5 +667,128 @@ To solve, assume different constraints are active/inactive:
 \end{thm}
 
 Looking ahead: $\min \text{cost}(u(\cdot))$ s.t.\ $\dot x = f(x,u)$ (dynamics), where $u$ is a function. Note the equality constraint
+
+% 2017/01/24
+\paragraph{Question:} How do we go from $u\in\R^m$ to $u\in\mathcal U$ (function space)?
+\subparagraph{Note:} Function space is a set of functions of a given kind from a set $X$ to a set $Y$
+\begin{enumerate}
+\item linear function
+\item square-integrable functions: $L_2[0,T]:$ $\int_0^T \Vert u(t)\Vert^2 \dif t < \infty$
+\item $C^\infty (\R)$
+\end{enumerate}
+What would $\partial \text{``cost''}/\partial u$ mean?
+
+\section{Directional Derivatives}
+\paragraph{Recall:} To minimize $g(u)$, let $u^*$ be a candidate minimizer and pitch a perturbation on $u^*$
+
+\begin{gather}
+  g(u^* + \epsilon v) = g(u^*) + \epsilon \pder{g}{u}(u^*) v + o(\epsilon) \\
+  \text{FONC: } \pder{g}{u}(u^*) = 0 \hspace{3cm} 
+\end{gather}
+
+\subparagraph{Note:} $\pder{g}{u}(u^*) v$ tells us how much $g(u)$ increases/decreases in the direction of $v$.
+
+\begin{defi}
+  The directional (Gateaux) derivative is given by
+  \[ \delta g(u;v) = \lim_{\epsilon\to0} \frac{g(u+\epsilon v)-g(u)}{\epsilon} \]
+\end{defi}
+
+\paragraph{Example}
+\[ g(u) = \frac12 u_1^2 - u_1 + 2u_2, \quad g:\R^2\to\R \]
+Let's consider $e_1=[1\ 0]\trans$, $e_2=[0\ 1]\trans$. What is $\delta g(u;e_i)$, $i=1,2$?
+\begin{align}
+  \delta g(u;v) &= \lim_{\epsilon\to0} \frac{g(u+\epsilon v)-g(u)}{\epsilon} \\
+                &= \lim_{\epsilon\to0} \frac{g(u)+\epsilon\pder{g}{u}(u) v + o(\epsilon) - g(u)}{\epsilon} \\
+                &= \pder{g}{u} (u) v
+\end{align}
+\begin{align}
+  \pder{g}{u}(u) &= [u_1-1\ 2] \\
+  \delta g(u;e_1) &= [u_1-1\ 2] e_1 = u_1-1 \\
+  \delta g(u;e_2) &= [u_1-1\ 2] e_2 = 2 \\
+\end{align}
+
+But the beauty of directional derivatives is that they generalize beyond vectors, $u\in\R^m$, to function spaces ($\mathcal U$) or other ``objects'' like matrices.
+
+\paragraph{Example} $M\in\R^{n\times n}$, $F(M)=M^2$
+
+What is $\pder{F}{M}$? (ponder at home\dots)
+
+We can easily compute $\delta F(M;N)$!
+\begin{align}
+  F(M+\epsilon N) &= (M+\epsilon N)(M+\epsilon N) = M^2 + \epsilon M N + \epsilon N M + \epsilon^2 N^2 \\
+  \delta F(M;N) &= \lim_{\epsilon\to0} \frac{F(M+\epsilon N)-F(M)}{\epsilon} \\
+                  &= \lim_{\epsilon\to0} \frac{\epsilon M N + \epsilon N M + \epsilon^2 N^2}{\epsilon} = MN + NM
+\end{align}
+
+\paragraph{Infinite Dimensional Optimization}
+Let $u\in\mathcal U$ (function space) and let $J(u)$ be the cost:
+\[ \min_{u\in\mathcal U} J(u) \]
+
+\begin{thm}
+  If $u^*\in\mathcal U$ is a (local) minimizer then
+  \[ \delta J(u^*;v) = 0, \quad \forall v\in\mathcal U \]
+\end{thm}
+
+\paragraph{Example} Find minimizer $u^*$ to
+\[ J(u) = \int_0^T L(u(t)) \dif t \]
+\begin{align}
+  J(u+\epsilon v) - J(u) &= \int_0^T L(u(t)+\epsilon v(t)) \dif t - \int_0^T L(u(t)) \dif t, \quad u,v\in\mathcal U \\
+                         &= \int_0^T \left[ L(u(t)) + \epsilon \pder{L}{u}(u(t)) v(t) + o(\epsilon) - L(u(t)) \right] \dif t \\
+  \delta J(u^*;v) &= \lim_{\epsilon\to0} \frac{J(u+\epsilon v)-J(u)}{\epsilon} \\
+                         &= \lim_{\epsilon\to0} \frac{\int_0^T \epsilon \pder{L}{u}(u(t)) v(t) \dif t + o(\epsilon)}{\epsilon} \\
+                         &= \int_0^T \pder{L}{u}(u(t)) v(t) \dif t \\
+\end{align}
+$u^*$ optimizer:
+\begin{gather}
+  \delta J(u^*;v) = \int_0^T \pder{L}{u}(u(t)) v(t) \dif t = 0 \quad \forall v\in\mathcal U \\
+  \Updownarrow \\
+  \pder{L}{u} (u(t)) = 0 \quad \forall t\in[0,T]
+\end{gather}
+But, we want \emph{optimal control}! We want our cost to look like
+\begin{gather}
+  \int_0^T L(x(t),u(t)) \dif t \\
+  \dot x = f(x,u)
+\end{gather}
+
+\section{Calculus of Variations}
+What happens to $x(t)$ when $u(t)$ changes to $u(t)+\epsilon v(t)$?
+
+Instead of $\dot{\hat x}=f(\hat x,u+\epsilon v)$, $\hat x(0)=x_0$, we can have
+\[ \tilde x=x+\epsilon \eta, \]
+where
+\begin{align}
+  \dot x&=f(x,u), & x(0) &= x_0 \\
+  \dot \eta &= \pder{f}{x}(x,u) \eta + \pder{f}{u}(x,u) v, & \eta(0) &= 0
+\end{align}
+
+\begin{thm}
+  If $f$ is continuously differentiable in $x$ and $u$ then
+  \[ \hat x(t) = \tilde x(t) + o(\epsilon) \]
+  \begin{proof}
+    \begin{enumerate}[label=\roman*)]
+    \item Initial conditions:
+      \begin{align}
+        \hat x(0) &= x_0 \\
+        \tilde x(0) &= x(0) + \epsilon \eta(0) = x_0
+      \end{align}
+    \item Dynamics:
+      \begin{align}
+        \dot{\hat x} &= f(\hat x,u+\epsilon v) \\
+        \dot{\tilde x} &= \dot x + \epsilon \dot \eta = f(x,u) + \epsilon \pder{f}{x}(x,u)\eta + \epsilon \pder{f}{x}(x,u) v \\
+                     &= f(x+\epsilon\eta,u+\epsilon v) + o(\epsilon) \\
+                     &= f(\tilde x,u+\epsilon v) + o(\epsilon)
+      \end{align}
+      We can see that $hat x(t)$ and $\tilde x(t)$ have the same form.
+      
+      Note: Taylor expansion with two elements is
+      \begin{align}
+        g(z_1+\epsilon w_1,z_2+\epsilon w_2) &= g(z_1,z_2+\epsilon w_2) + \epsilon\pder{g}{z_1}(z_1,z_2+\epsilon w_2) w_1 + o(\epsilon) \\
+                                             &= g(z_1,z_2) + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 \\
+                                             & \qquad + \epsilon\pder{^2 g}{z_2\partial z_1}(z_1,z_2)w_1w_2 + o(\epsilon) \\
+                                             &= g(z_1,z_2) + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 + o(\epsilon)
+      \end{align}
+    \end{enumerate}
+  \end{proof}
+\end{thm}
 
 \end{document}
