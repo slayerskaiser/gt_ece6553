@@ -1,0 +1,121 @@
+\nonstopmode
+
+\documentclass[letterpaper,12pt,titlepage]{report}
+\usepackage{amsthm,amssymb,mathtools}
+\mathtoolsset{showonlyrefs}
+\usepackage{bm}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[L]{K.\ Okkelberg}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\newcommand*\dif{\mathop{}\!\mathrm{d}}
+\newcommand{\trans}{^\text{T}}
+\newcommand{\herm}{^\text{H}}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\trace}{trace}
+\DeclareMathOperator{\sign}{sign}
+\let\Pr\relax
+\DeclareMathOperator{\Pr}{P}
+
+\begin{document}
+
+\title{ECE 6553: Optimal Control Notes}
+\author{Klaus Z.\ Okkelberg}
+\date{Spring 2017}
+\maketitle
+
+\chapter{Parameter Optimization}
+
+% 2017/01/10
+\section{What is optimal control?}
+\paragraph{Optimal} Maximize/minimize cost (subject to constraints): $ \min_u g(u) $
+
+With constraints,
+\begin{align}
+  \min_u {}\ & g(u) \\
+  \text{s.t. } & \begin{cases} h_1(u) = 0 \\ h_2(u) \le 0 \end{cases}
+\end{align}
+
+First-order necessary condition (FONC):
+\[ \frac{\partial g}{\partial u}(u^*) = 0 \]
+
+Optimality can be
+\begin{itemize}
+\item local vs global
+\item max vs min
+\end{itemize}
+
+\begin{tikzpicture}
+  \draw [thick,->] (0,0) -- (0,4) node [anchor=east] {$g$};
+  \draw [thick,->] (0,0) -- (6.5,0) node [anchor=north west] {$u$};
+  \draw plot [smooth, tension=1] coordinates { (0.5,3) (2,0.5) (3.5,3) (4.25,1) (5,2) (5.5,1.5) (6,2) };
+  \draw [thick] (2,0.1) -- (2,-0.1) node [anchor=north] {$u^*$};
+\end{tikzpicture}
+
+\paragraph{Control} control design: pick $u$ such that specifications are satisfied:
+\[ \dot{x} = f(x,u), \qquad \dot{x} = Ax + Bu, \]
+where $x(t)\in\mathbb{R}^n$ is the state, $u(t)\in\mathbb{R}^m$ is the control, and $f(\cdot)$ is the dynamics.
+
+Actually, $x$ and $u$ are signals:
+\[ x:[0,T]\to\mathbb{R}^n, \qquad u:[0,T]\to\mathbb{R}^m \]
+
+\paragraph{Optimal control} find the ``best'' u!
+
+For ``best'' to mean anything, we need a cost. The big/deep question is
+\[ \frac{\partial \text{``cost''}}{\partial u} = 0 \]
+
+\paragraph{Example} \mbox{}
+
+Suppose we have a car with position $p$. Its acceleration $\ddot{p}$ is controlled by the gas/brake input $u$ ($\ddot{p}=u$). In order to express the dynamics of the system in the form $\dot{x}=f(x,u)$, we introduce state variables:
+\[
+  \begin{aligned} x_1 &= p \\ x_2 &= \dot{p} \end{aligned}
+  \ \Longrightarrow \
+  \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases}
+\]
+The task is to move the car from its initial position to a stop at a distance of $c$ away.
+
+\subparagraph{Minimum energy problem}
+\begin{align}
+  \min_u {}\ & \int_0^T\! u^2(t) \dif t \\
+  \text{s.t. } & \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases} \\
+             & x_1(0) = 0,\, x_2(0) = 0 \\
+             & x_1(T) = c,\, x_2(T) = 0
+\end{align}
+
+\subparagraph{Minimum time problem}
+\begin{align}
+  \min_{u,T} {}\ & T = \int_0^T\! \dif t \\
+  \text{s.t. } & \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases} \\
+                 & x_1(0) = 0,\, x_2(0) = 0 \\
+                 & x_1(T) = c,\, x_2(T) = 0 \\
+                 & u(t) \in [u_\text{min},u_\text{max}]
+\end{align}
+
+The general optimal control problem we will solve will look like
+\begin{align}
+  \min_{u,T} {}\ & \int_0^T\! L(x(t),u(t),t) \dif t + \Psi(x(T)) \\
+  \text{s.t. } & \dot{x}(t) = f(x(t),u(t),t),\ t\in[0,T] \\
+                 & x(0) = x_0 \\
+                 & x(T) \in S \\
+                 & u(t) \in \Omega,\ t\in[0,T]
+\end{align}
+where $\Psi(\cdot)$ is the terminal cost and $S$ is the terminal manifold. This is a so-called \textbf{Bolza Problem}.
+
+\paragraph{What tools do we need to solve this?}
+\begin{enumerate}
+\item optimality conditions $\partial\text{cost}/\partial u=0$
+\item some way of representing the optimal signal $u^*(x,t)$
+\item some way of actually finding/computing the optimal controllers
+\end{enumerate}
+
+\end{document}
