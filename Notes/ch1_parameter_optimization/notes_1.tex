@@ -9,7 +9,7 @@
 \usepackage{enumitem}
 \usepackage{framed}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows,positioning,patterns,calc}
+\usetikzlibrary{shapes,arrows,positioning,patterns,calc,decorations.pathmorphing}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.9}
 
@@ -40,6 +40,7 @@
 
 \tikzstyle{line} = [draw, thick, >=latex]
 \tikzstyle{dot} = [circle,fill=black,inner sep=0pt,minimum size=4pt]
+\tikzset{>=latex}
 
 \begin{document}
 
@@ -142,102 +143,102 @@ Let the decision variable be $u=[u_1, \dots, u_m]\trans\in\mathbb R^m$. The cost
 For $u^*$ to be a minimizer, we need
 \[ \pder{g}{u} (u^*) = 0 \]
 \begin{defi}
-$u^*$ is a (local) minimizer to $g$ if $\exists\delta>0$ s.t.
-\begin{gather}
-g(u^*) \le g(u) \quad \forall u\in B_\delta(u^*) \\
-B_\delta(u^*) = \{ u \mid \Vert u-u^* \Vert \le \delta \}
-\end{gather}
+  $u^*$ is a (local) minimizer to $g$ if $\exists\delta>0$ s.t.
+  \begin{gather}
+    g(u^*) \le g(u) \quad \forall u\in B_\delta(u^*) \\
+    B_\delta(u^*) = \{ u \mid \Vert u-u^* \Vert \le \delta \}
+  \end{gather}
 \end{defi}
 
 \paragraph{Note:} \mbox{}
 \begin{itemize}
 \item $\displaystyle \pder{g}{u}(u^*) \delta u \in \mathbb R$ and $\delta u$ is $m\times 1$, so $\displaystyle \pder{g}{u}$ is a $1\times m$ row vector. For the column vector,
-\[ \nabla g = \pder{g\trans}{u} \in \mathbb R^m \]
+  \[ \nabla g = \pder{g\trans}{u} \in \mathbb R^m \]
 \item $\displaystyle \pder{g}{u} \, \delta u$ is an inner product
-\[ \langle \nabla g, \delta u \rangle = \left\langle \pder{g\trans}{u}, \delta u \right\rangle \]
+  \[ \langle \nabla g, \delta u \rangle = \left\langle \pder{g\trans}{u}, \delta u \right\rangle \]
 \item $o(\epsilon)$ encodes higher-order terms
-\[ \lim_{\epsilon\to 0} \frac{o(\epsilon)}{\epsilon} = 0 \qquad \text{``faster than linear''} \]
-This is opposed to big-O notation:
-\[ \lim_{\epsilon\to 0} \frac{\mathcal O(\epsilon)}{\epsilon} = c \]
+  \[ \lim_{\epsilon\to 0} \frac{o(\epsilon)}{\epsilon} = 0 \qquad \text{``faster than linear''} \]
+  This is opposed to big-O notation:
+  \[ \lim_{\epsilon\to 0} \frac{\mathcal O(\epsilon)}{\epsilon} = c \]
 \item $\delta u$ has direction and scale so we could write it as
-\[ \delta u = \epsilon v, \quad \epsilon\in\mathbb R,\ v\in\mathbb R^m \]
+  \[ \delta u = \epsilon v, \quad \epsilon\in\mathbb R,\ v\in\mathbb R^m \]
 \end{itemize}
 
 \begin{thm}
-For $u^*$ to be a minimizer, we need
-\[ \pder{g}{u} (u^*) = 0 \]
-or, equivalently,
-\[ \pder{g}{u} (u^*) v = 0 \quad \forall v\in\mathbb R^m \]
+  For $u^*$ to be a minimizer, we need
+  \[ \pder{g}{u} (u^*) = 0 \]
+  or, equivalently,
+  \[ \pder{g}{u} (u^*) v = 0 \quad \forall v\in\mathbb R^m \]
 \end{thm}
 
 \begin{proof}
-Let $u^*$ be a minimizer. Evaluating the cost $g(u)$ in the ball and using Taylor's expansion,
-\[ g(u^* + \delta u) = g(u^*) + \pder{g}{u} (u^*) \delta u + o(\Vert\delta u\Vert) = g(u^*) + \epsilon \pder{g}{u} (u^*) v + o(\epsilon) \]
-Assume that $\pder{g}{u} \neq 0$. Then we could pick $v=-\pder{g\trans}{u}(u^*)$, i.e.
-\[ g(u^*+\epsilon v) = g(u^*) - \epsilon \left\Vert \pder{g\trans}{u} (u^*) \right\Vert^2 + o(\epsilon) \]
-Note that the second term is negative per our assumptions. So, for $\epsilon$ sufficiently small, we have
-\[ g \Big( u^* - \epsilon\pder{g\trans}{u} (u^*) \Big) < g(u^*) \]
-This contradicts $u^*$ being a minimizer. \quad
-\begin{tikzpicture}[scale=0.3]
-  \draw (0,0) -- (1,1);
-  \draw (0,1) -- (1,0);
-  \draw (0,0.35) -- (0.35,0);
-  \draw (0.65,0) -- (1,0.35);
-\end{tikzpicture}
-(crossed swords)
+  Let $u^*$ be a minimizer. Evaluating the cost $g(u)$ in the ball and using Taylor's expansion,
+  \[ g(u^* + \delta u) = g(u^*) + \pder{g}{u} (u^*) \delta u + o(\Vert\delta u\Vert) = g(u^*) + \epsilon \pder{g}{u} (u^*) v + o(\epsilon) \]
+  Assume that $\pder{g}{u} \neq 0$. Then we could pick $v=-\pder{g\trans}{u}(u^*)$, i.e.
+  \[ g(u^*+\epsilon v) = g(u^*) - \epsilon \left\Vert \pder{g\trans}{u} (u^*) \right\Vert^2 + o(\epsilon) \]
+  Note that the second term is negative per our assumptions. So, for $\epsilon$ sufficiently small, we have
+  \[ g \Big( u^* - \epsilon\pder{g\trans}{u} (u^*) \Big) < g(u^*) \]
+  This contradicts $u^*$ being a minimizer. \quad
+  \begin{tikzpicture}[scale=0.3]
+    \draw (0,0) -- (1,1);
+    \draw (0,1) -- (1,0);
+    \draw (0,0.35) -- (0.35,0);
+    \draw (0.65,0) -- (1,0.35);
+  \end{tikzpicture}
+  (crossed swords)
 \end{proof}
 
 \begin{defi}[Positive definite]
-$M=M\trans \succ 0$ if
-\begin{gather}
-  z\trans M z > 0 \quad \forall z\neq 0,\ z\in\mathbb R^m \\
-  \Longleftrightarrow M \text{ has real and positive eigenvalues}
-\end{gather}
+  $M=M\trans \succ 0$ if
+  \begin{gather}
+    z\trans M z > 0 \quad \forall z\neq 0,\ z\in\mathbb R^m \\
+    \Longleftrightarrow M \text{ has real and positive eigenvalues}
+  \end{gather}
 \end{defi}
 
 \begin{thm}
-If $g\in C^2$, then a \textbf{sufficient} condition for $u^*$ to be a (local) minimizer is
-\begin{enumerate}
-\item $\displaystyle \pder{g}{u}(u^*) = 0$
-\item $\displaystyle \pder{^2 g}{u^2}(u^*) \succ 0$ (the Hessian is positive definite)
-\end{enumerate}
+  If $g\in C^2$, then a \textbf{sufficient} condition for $u^*$ to be a (local) minimizer is
+  \begin{enumerate}
+  \item $\displaystyle \pder{g}{u}(u^*) = 0$
+  \item $\displaystyle \pder{^2 g}{u^2}(u^*) \succ 0$ (the Hessian is positive definite)
+  \end{enumerate}
 \end{thm}
 
 \begin{defi}
-$g:\mathbb R^m\to\mathbb R$ is convex if
-\[ g(\alpha u_1 + (1-\alpha)u_2) \le \alpha g(u_1) + (1-\alpha)g(u_2) \quad \forall \alpha\in[0,1], \ u_1,\! u_2\in\mathbb R^m \]
-\begin{center}
-  \begin{tikzpicture}
-    \path [line,->] (-0.5,0) -- (4.5,0) node [anchor=west] {$u$};
-    \path [line,->] (0,-0.5) -- (0,3) node [anchor=east] {$g(u)$};
-    \draw (0.7,2.5) parabola bend (2.25,0.5) (3.8,2.5);
-    \path [line] (1.3,-0.2) node [anchor=north] {$u_1$} -- (1.3,0.2);
-    \path [line] (3.5,-0.2) node [anchor=north] {$u_2$} -- (3.5,0.2);
-    \path [line] (2.25,-0.2) node [pin={[pin edge={black}] below:{$\alpha u_1 + (1-\alpha)u_2$}}] {} -- (2.25,0.2);
-    \draw (1.3,1.25) -- (3.5,1.8);
-    \fill (1.3,1.25) circle (0.07);
-    \fill (3.5,1.8) circle (0.07);
-    \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$g(\alpha u_1 + (1-\alpha)u_2)$}}] at (2.25,0.5) {$\bm *$};
-    \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$\alpha g(u_1) + (1-\alpha)g(u_2)$}}] at (2.25,1.48) {$\bm *$};
-  \end{tikzpicture}
-\end{center}
+  $g:\mathbb R^m\to\mathbb R$ is convex if
+  \[ g(\alpha u_1 + (1-\alpha)u_2) \le \alpha g(u_1) + (1-\alpha)g(u_2) \quad \forall \alpha\in[0,1], \ u_1,\! u_2\in\mathbb R^m \]
+  \begin{center}
+    \begin{tikzpicture}
+      \path [line,->] (-0.5,0) -- (4.5,0) node [anchor=west] {$u$};
+      \path [line,->] (0,-0.5) -- (0,3) node [anchor=east] {$g(u)$};
+      \draw (0.7,2.5) parabola bend (2.25,0.5) (3.8,2.5);
+      \path [line] (1.3,-0.2) node [anchor=north] {$u_1$} -- (1.3,0.2);
+      \path [line] (3.5,-0.2) node [anchor=north] {$u_2$} -- (3.5,0.2);
+      \path [line] (2.25,-0.2) node [pin={[pin edge={black}] below:{$\alpha u_1 + (1-\alpha)u_2$}}] {} -- (2.25,0.2);
+      \draw (1.3,1.25) -- (3.5,1.8);
+      \fill (1.3,1.25) circle (0.07);
+      \fill (3.5,1.8) circle (0.07);
+      \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$g(\alpha u_1 + (1-\alpha)u_2)$}}] at (2.25,0.5) {$\bm *$};
+      \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$\alpha g(u_1) + (1-\alpha)g(u_2)$}}] at (2.25,1.48) {$\bm *$};
+    \end{tikzpicture}
+  \end{center}
 \end{defi}
 
 \begin{thm}
-If $\pder{^2 g}{u^2} (u) \succeq 0$ $\forall u\in\mathbb R^m$, then $g$ is convex. ($\Longleftrightarrow$ for $g\in C^2$)
+  If $\pder{^2 g}{u^2} (u) \succeq 0$ $\forall u\in\mathbb R^m$, then $g$ is convex. ($\Longleftrightarrow$ for $g\in C^2$)
 \end{thm}
 
 \paragraph{Example} $\displaystyle \min_u u\trans Q u - b\trans u$ where $Q=Q\trans\succ 0$ (positive definite matrix)
 \begin{align}
-\pder{g}{u} &= \pder{}{u} (u\trans Qu - b\trans u) \\
-&= u\trans Q\trans + u\trans Q - b\trans \\
-&= 2u\trans Q - b\trans \\[-3ex]
+  \pder{g}{u} &= \pder{}{u} (u\trans Qu - b\trans u) \\
+              &= u\trans Q\trans + u\trans Q - b\trans \\
+              &= 2u\trans Q - b\trans \\[-3ex]
   \pder{^2 g}{u^2} &= 2Q
-& \pder{^2 g}{u^2} = \begin{bmatrix}
-  \pder{^2 g}{u_1^2} & \cdots & \pder{^2 g}{u_1 \partial u_m} \\
-  \vdots & \ddots & \vdots \\
-  \pder{^2 g}{u_m \partial u_1} & \cdots & \pder{^2 g}{u_m^2}
-\end{bmatrix}
+              & \pder{^2 g}{u^2} = \begin{bmatrix}
+                \pder{^2 g}{u_1^2} & \cdots & \pder{^2 g}{u_1 \partial u_m} \\
+                \vdots & \ddots & \vdots \\
+                \pder{^2 g}{u_m \partial u_1} & \cdots & \pder{^2 g}{u_m^2}
+              \end{bmatrix}
 \end{align}
 From $\pder{g}{u} = 2u\trans Q-b\trans = 0$,
 \[ u = \frac12 Q^{-1} b \]
@@ -311,7 +312,7 @@ known as the \emph{steepest descend} direction. This produces
     e.g.\ $\gamma_k=c/k$, then $u_k\to u^*$ as $k\to\infty$.
   \end{thm}
   
-% 2017/01/17
+  % 2017/01/17
 \item Choice 3: \textbf{Armijo step-size:} Take as big a step as possible, but no larger
 
   Pick $\alpha\in(0,1)$, $\beta\in(0,1)$. Let $i$ be the smallest non-negative integer such that
@@ -414,9 +415,9 @@ or
   \end{align}
   then $\exists\lambda\in\R^k$ s.t.
   \[ \begin{cases}
-    \displaystyle \pder{L}{u}(u^*,\lambda) = 0 \\[2ex]
-    \displaystyle \pder{L}{\lambda}(u^*,\lambda) = 0
-  \end{cases} \]
+      \displaystyle \pder{L}{u}(u^*,\lambda) = 0 \\[2ex]
+      \displaystyle \pder{L}{\lambda}(u^*,\lambda) = 0
+    \end{cases} \]
   where the Lagrangian $L$ is given by
   \[ L(u,\lambda) = g(u) + \lambda\trans h(u) \]
 \end{thm}
@@ -502,7 +503,7 @@ Problem: Given $m$, find $p$ such that $E$ is maximized.
   p_j &= e^{\lambda_2 - 1 + \lambda_1 x_j}, \quad j=1,\dots,n \qquad (p_j\ge0 \text{ so we're ok with ignoring that})
 \end{align}
 \begin{align}
-\sum e^{\lambda_2 - 1 + \lambda_1 x_j} x_j &= m && n+2 \text{ equations and} \\
+  \sum e^{\lambda_2 - 1 + \lambda_1 x_j} x_j &= m && n+2 \text{ equations and} \\
   \sum e^{\lambda_2 - 1 + \lambda_1 x_j} &= 1 && n+2 \text{ unknowns\dots}
 \end{align}
 No analytical solution, but numerically ``solvable''
@@ -666,7 +667,7 @@ To solve, assume different constraints are active/inactive:
     \end{cases} \]
 \end{thm}
 
-Looking ahead: $\min \text{cost}(u(\cdot))$ s.t.\ $\dot x = f(x,u)$ (dynamics), where $u$ is a function. Note the equality constraint
+Looking ahead: $\min \text{cost}(u(\cdot))$ s.t.\ $\dot x = f(x,u)$ (dynamics), where $u$ is a function. Note the equality constraint.
 
 % 2017/01/24
 \paragraph{Question:} How do we go from $u\in\R^m$ to $u\in\mathcal U$ (function space)?
@@ -679,7 +680,15 @@ Looking ahead: $\min \text{cost}(u(\cdot))$ s.t.\ $\dot x = f(x,u)$ (dynamics), 
 What would $\partial \text{``cost''}/\partial u$ mean?
 
 \section{Directional Derivatives}
-\paragraph{Recall:} To minimize $g(u)$, let $u^*$ be a candidate minimizer and pitch a perturbation on $u^*$
+\paragraph{Recall:} To minimize $g(u)$, let $u^*$ be a candidate minimizer and pitch a perturbation on $u^*$ of $\epsilon v$, where $\epsilon$ is the scale and $v$ is the direction. Taking Taylor's expansion at the perturbation produces
+
+\begin{center}
+  \begin{tikzpicture}
+    \node [dot] (a) at (0,0) {};
+    \node [dot] (b) at (3,1) {};
+    \draw [>=latex,->,thick] (a) node [anchor=east] {$u^*$} -- (b) node [anchor=west] {$u^*+\epsilon v$};
+  \end{tikzpicture}
+\end{center}
 
 \begin{gather}
   g(u^* + \epsilon v) = g(u^*) + \epsilon \pder{g}{u}(u^*) v + o(\epsilon) \\
@@ -751,20 +760,47 @@ But, we want \emph{optimal control}! We want our cost to look like
 \end{gather}
 
 \section{Calculus of Variations}
-What happens to $x(t)$ when $u(t)$ changes to $u(t)+\epsilon v(t)$?
+What happens to $x(t)$ when $u(t)$ changes to $u(t)+\epsilon v(t)$? Let the system be given by
+\[ \begin{cases}
+    \dot x = f(x,u) \\
+    x(0) = x_0
+  \end{cases} \]
+After perturbation of $u$, the new system is
+\[ \begin{cases}
+    \dot{\hat x} = f(\hat x,u+\epsilon v) \\
+    x(0) = x_0
+  \end{cases} \]
 
-Instead of $\dot{\hat x}=f(\hat x,u+\epsilon v)$, $\hat x(0)=x_0$, we can have
+\pgfmathsetseed{11}
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
+    \draw [thick,->] (0,-0.5) -- (0,3) node [anchor=east] {};
+    \draw [decorate, decoration={random steps, segment length=7pt, amplitude=5pt}, rounded corners=2pt] (0,1) to[in=180,out=0,distance=3.5cm] (3.5,1) node [anchor=south west] {$u(t)$};
+    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=3pt] (0,2) to[in=180,out=0,distance=3cm] (3.5,2.5) node [anchor=south] {$u(t)+\epsilon v(t)$};
+
+    \draw [thick,->] (5,0) -- (9.5,0) node [anchor=west] {$t$};
+    \draw [thick,->] (5.5,-0.5) -- (5.5,3) node [anchor=east] {};
+    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=4pt}, rounded corners=3pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=200,out=0,distance=3cm] (9,1.5) node [anchor=south west] {$x(t)$};
+    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=2pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=170,out=30,distance=3cm] (9,2.5) node [anchor=south west] {$\hat x(t)$};
+    \node [dot] at (5.5,0.75) {};
+  \end{tikzpicture}
+\end{center}
+
+\noindent
+Consider
 \[ \tilde x=x+\epsilon \eta, \]
 where
-\begin{align}
+\begin{alignat}{2}
   \dot x&=f(x,u), & x(0) &= x_0 \\
-  \dot \eta &= \pder{f}{x}(x,u) \eta + \pder{f}{u}(x,u) v, & \eta(0) &= 0
-\end{align}
+  \dot \eta &= \pder{f}{x}(x,u) \eta + \pder{f}{u}(x,u) v, \qquad & \eta(0) &= 0
+\end{alignat}
 
 \begin{thm}
   If $f$ is continuously differentiable in $x$ and $u$ then
   \[ \hat x(t) = \tilde x(t) + o(\epsilon) \]
   \begin{proof}
+    \mbox{}
     \begin{enumerate}[label=\roman*)]
     \item Initial conditions:
       \begin{align}
@@ -774,21 +810,27 @@ where
     \item Dynamics:
       \begin{align}
         \dot{\hat x} &= f(\hat x,u+\epsilon v) \\
-        \dot{\tilde x} &= \dot x + \epsilon \dot \eta = f(x,u) + \epsilon \pder{f}{x}(x,u)\eta + \epsilon \pder{f}{x}(x,u) v \\
+        \dot{\tilde x} &= \dot x + \epsilon \dot \eta = f(x,u) + \epsilon \pder{f}{x}(x,u)\eta + \epsilon \pder{f}{u}(x,u) v \\
                      &= f(x+\epsilon\eta,u+\epsilon v) + o(\epsilon) \\
                      &= f(\tilde x,u+\epsilon v) + o(\epsilon)
       \end{align}
-      We can see that $hat x(t)$ and $\tilde x(t)$ have the same form.
-      
-      Note: Taylor expansion with two elements is
+      We can see that the dynamics of $\hat x(t)$ are equal to those of $\tilde x(t)$ plus higher order terms:
       \begin{align}
-        g(z_1+\epsilon w_1,z_2+\epsilon w_2) &= g(z_1,z_2+\epsilon w_2) + \epsilon\pder{g}{z_1}(z_1,z_2+\epsilon w_2) w_1 + o(\epsilon) \\
-                                             &= g(z_1,z_2) + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 \\
-                                             & \qquad + \epsilon\pder{^2 g}{z_2\partial z_1}(z_1,z_2)w_1w_2 + o(\epsilon) \\
-                                             &= g(z_1,z_2) + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 + o(\epsilon)
+        \dot{\tilde x} &= f(\tilde x,u+\epsilon v) + o(\epsilon) \\
+        \dot{\hat x} &= f(\hat x,u+\epsilon v)
       \end{align}
+      Therefore, if our perturbation is small enough, we can model $\hat x(t)$ as $\tilde x(t)$.
     \end{enumerate}
   \end{proof}
 \end{thm}
+Note: Taylor expansion with two elements is
+\begin{align}
+  g(z_1+\epsilon w_1,z_2+\epsilon w_2) &= g(z_1,z_2+\epsilon w_2) + \epsilon\pder{g}{z_1}(z_1,z_2+\epsilon w_2) w_1 + o(\epsilon) \\
+                                       &= g(z_1,z_2) + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 \\
+                                       & \qquad + \epsilon^2\pder{^2 g}{z_2\partial z_1}(z_1,z_2)w_1w_2 + o(\epsilon) \\
+                                       &= g(z_1,z_2) + \epsilon\pder{g}{z_1}(z_1,z_2)w_1 + \epsilon\pder{g}{z_2}(z_1,z_2)w_2 + o(\epsilon)
+\end{align}
+
+% 2017/01/26
 
 \end{document}
