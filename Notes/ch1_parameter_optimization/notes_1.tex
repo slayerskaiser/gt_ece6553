@@ -32,6 +32,7 @@
 \DeclareMathOperator{\Pr}{P}
 \newcommand*\pder[2]{\frac{\partial #1}{\partial #2}}
 \newcommand*\R{\mathbb{R}}
+\newcommand*\U{\mathcal{U}}
 
 \theoremstyle{plain}
 \newtheorem*{thm}{Theorem}
@@ -772,7 +773,7 @@ After perturbation of $u$, the new system is
   \end{cases} \]
 
 \pgfmathsetseed{11}
-\begin{center}
+\begin{figure}
   \begin{tikzpicture}
     \draw [thick,->] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
     \draw [thick,->] (0,-0.5) -- (0,3) node [anchor=east] {};
@@ -785,7 +786,9 @@ After perturbation of $u$, the new system is
     \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=2pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=170,out=30,distance=3cm] (9,2.5) node [anchor=south west] {$\hat x(t)$};
     \node [dot] at (5.5,0.75) {};
   \end{tikzpicture}
-\end{center}
+  \caption{Variation in $u$ causes a variation in $x$.}
+  \label{fig:var_u_x}
+\end{figure}
 
 \noindent
 Consider
@@ -832,5 +835,138 @@ Note: Taylor expansion with two elements is
 \end{align}
 
 % 2017/01/26
+\paragraph{Last class:} \mbox{}
+\begin{enumerate}
+\item $u\in\U$ (space of functions), $J:\U\to\R$ (cost).
+
+  FONC: If $u^*$ is optimal, then
+  \[ \delta J(u;v) = 0 \quad \forall v\in\U, \]
+  where the directional derivative is given by
+  \[ \delta J(u;v) = \lim_{\epsilon\to0} \frac{J(u+\epsilon v)-J(u)}{\epsilon}. \]
+\item If
+  \[ \begin{cases}
+      \dot x = f(x,u) \\
+      x(0) = x_0
+    \end{cases} \]
+  then a variation in $u$:
+  \[ u \longrightarrow u+\epsilon v \]
+  results in a variation in $x$:
+  \[ x \longrightarrow x+\epsilon\eta + o(\epsilon) \]
+  See Fig.~\ref{fig:var_u_x}.
+\end{enumerate}
+
+\paragraph{An (almost) optimal control problem} \mbox{}
+
+Let $\dot x=f(x)$., $x(0)=x_0$. Note we get to pick the initial condition!
+\subparagraph{Problem}
+\begin{gather}
+  \min_{x_0\in\R^m} J(x_0) = \int_0^T L(x(t)) \dif t \\
+  \text{s.t. } \begin{cases}
+    \dot x(t) = f(x(t)) & \text{the \emph{constraint}! (equality)} \\
+    x(0)=x_0
+  \end{cases}
+\end{gather}
+Note every constraint needs a Lagrange multiplier. We have infinitely many constraints:
+\[ \dot x(t) = f(x(t)) \quad \forall t\in[0,T] \]
+We need $\lambda(t)$ as a function of $t$. Also, the sum in the Lagrangian has to become an integral.
+
+The continuous-time Lagrangian thus becomes
+\[ \tilde J(x_0,\lambda) = \int_0^T \Big[ L(x(t)) + \lambda\trans(t) (f(x(t))-\dot x(t)) \Big] \dif t \]
+The task is to perturb $x_0$ as $x_0\longrightarrow x_0+\epsilon v$, $v\in\R^m$ and compute
+\[ \delta \tilde J(x_0;v) = \lim_{\epsilon\to0} \frac{\tilde J(x_0+\epsilon v)-\tilde J(x_0)}{\epsilon} \]
+and make this equal to 0 $\forall v\in\R^m$. The variation in $x$ is
+
+\pgfmathsetseed{11}
+\begin{center}
+  \begin{tikzpicture}
+    \draw [->,thick] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
+    \draw [->,thick] (0,-0.5) -- (0,3);
+    \draw [decorate, decoration={random steps, segment length=7pt, amplitude=5pt}, rounded corners=2pt] (0,1) node [anchor=east] {$x_0$} to[in=180,out=0,distance=3.5cm] (3.5,1) node [anchor=south west] {$x$};
+    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=3pt] (0,2) node [anchor=east] {$x_0+\epsilon v$} to[in=180,out=0,distance=3cm] (3.5,2.5) node [anchor=south] {$x+\epsilon\eta(t)+o(\epsilon)$};
+    \draw [thick] (3.5,0.2) -- (3.5,-0.2) node [anchor=north] {$T$};
+  \end{tikzpicture}
+\end{center}
+
+Note:
+\begin{alignat}{2}
+  x_0 \quad & \text{decision variable} \\
+  \eta & \text{variation in $x_0$} \\
+  x(t) & \text{trajectory starting at $x_0$} \\
+  \eta(t) & \text{change in trajectory resulting from $\eta$-variation in $x_0$} \\
+  \lambda(t) & \text{time-varying Lagrange multiplier}
+\end{alignat}
+
+\begin{align}
+  \tilde J(x_0+\epsilon v) &= \int_0^T \Big\{ L(x(t)) + \lambda\trans(t) [f(x(t)+\epsilon\eta(t)) - \dot x(t) - \epsilon\dot\eta(t)] \Big\} \dif t + o(\epsilon) \\
+                           &= \int_0^T \left[ L(x) + \epsilon\pder{L}{x}(x)\eta + \lambda\trans \left( f(x) + \epsilon\pder{f}{x}(x)\eta - \dot x - \epsilon\dot\eta \right) \right] \dif t + o(\epsilon) \\
+  \tilde J(x_0+\epsilon v) - \tilde J(x_0) &= \int_0^T \left[ \epsilon\pder{L}{x}(x)\eta + \lambda\trans\left( \epsilon\pder{f}{x}\eta - \epsilon\dot\eta \right) \right] \dif t + o(\epsilon) \\
+  \delta \tilde J (x_0;v) &= \int_0^T \left[ \pder{L}{x}(x)\eta + \lambda\trans\left( \pder{f}{x}\eta - \dot\eta \right) \right] \dif t
+\end{align}
+A powerful idea: We want $\delta\tilde J(x_0;v)=0$ $\forall v$. Somehow get this in the form
+\[ \int_0^T \Big(\text{stuff}(t)\Big) \eta(t) \dif t = 0 \]
+We can pick $\text{stuff}(t)=0$ $\forall t\in[0,T]$.
+
+In $\delta\tilde J(x_0;v)$ we have $\dot\eta$ (problem!). We can solve this using \emph{integration by parts}.
+\[ \int_0^T \lambda\trans \dot\eta \dif t = \lambda\trans(T)\eta(T) - \lambda\trans(0)\eta(0) - \int_0^T \dot\lambda\trans\eta \dif t \]
+Hence,
+\[
+  \delta\tilde J(x_0;\nu) &= \int_0^T \underbrace{\big( \pder{L}{x} + \lambda\trans\pder{f}{x} + \dot\lambda\trans \big)}_{\text{pick}=0} \eta \dif t - \underbrace{\lambda\trans(T)}_{\text{pick}=0} \eta(T) + \lambda\trans(0) \underbrace{\eta(0)}_{\nu}
+\]
+We are free to pick $\lambda$ freely if it gives $\delta\tilde J=0$.
+\[ \text{Pick: } \begin{cases}
+    \dot\lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
+    \lambda(T) = 0 & \text{backwards diff. eq.}
+  \end{cases} \]
+Under this choice of $\lambda$ we get
+\[ \delta\tilde J(x_0;\nu) = \lambda\trans(0) \nu \]
+This is linear in $\nu$ so the FONC is $\lambda(0)=0$.
+
+Moreover, we really had a ``normal'' optimization problem
+\begin{gather}
+  \min_{x_0\in\R^m} \tilde J(x_0) \\
+  \delta \tilde J(x_0;\nu) = \pder{\tilde J}{x_0} (x_0) \nu
+\end{gather}
+which means that
+\[ \pder{\tilde J}{x_0} = \lambda\trans(0) \]
+If $x_0^*$ minimizes
+\begin{gather}
+  \int_0^T L(x(t)) \dif t \\
+  \text{s.t. } \begin{cases}
+    \dot x(t) = f(x(t)) \\
+    x(0) = x_0^*
+  \end{cases}
+\end{gather}
+then
+\[ \lambda(0) = \bm 0 \]
+where $\lambda(t)$ satisfies
+\[ \begin{cases}
+    \dot \lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
+    \lambda(T) = 0
+  \end{cases} \]
+
+\paragraph{So what?} \mbox{}
+
+We actually had a two-point boundary value problem [figure and explanation missing]
+
+\paragraph{An algorithm} \mbox{}
+
+\begin{enumerate}
+\item Pick $x_{0,0}$, $k=1$
+\item Repeat
+\item Simulate $x(t)$ from $x_{0,k}$ over $[0,T]$
+\item Simulate $\lambda(t)$ from $\lambda(T)=0$ backwards using $x(t)$.
+\item Update $x_{0,k}$ as
+  \[ x_{0,k+1} = x_{0,k} - \gamma\lambda(0) \]
+\item $k:=k+1$
+\item Until $\lambda(0)=0$
+\end{enumerate}
+
+\paragraph{Example:} \texttt{optinit.m}
+
+\[ \dot x = Ax, \quad L=x\trans Qx-q, \quad Q=Q\trans \succ 0 \]
+\begin{align}
+  \dot \lambda &= -2Qx - A\trans\lambda \\
+  \lambda(0) &= 0
+\end{align}
 
 \end{document}
