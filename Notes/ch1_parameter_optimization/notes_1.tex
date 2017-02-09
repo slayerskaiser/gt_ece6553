@@ -1,7 +1,8 @@
 \nonstopmode
 
 \documentclass[letterpaper,12pt,titlepage]{report}
-\usepackage{amsthm,amssymb,mathtools}
+\usepackage{amsthm,amssymb}
+\usepackage{mathtools}
 \mathtoolsset{showonlyrefs}
 \usepackage{bm}
 \usepackage[margin=1in]{geometry}
@@ -14,6 +15,8 @@
 \pgfplotsset{compat=1.9}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+
+\usepackage[pdfpagelabels]{hyperref}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -47,10 +50,12 @@
 
 \begin{document}
 
+\hypersetup{pageanchor=false}
 \title{ECE 6553: Optimal Control Notes}
 \author{Klaus Z.\ Okkelberg}
 \date{Spring 2017}
 \maketitle
+\hypersetup{pageanchor=true}
 
 \chapter{Parameter Optimization}
 
@@ -87,7 +92,7 @@ Optimality can be
 where $x(t)\in\mathbb{R}^n$ is the state, $u(t)\in\mathbb{R}^m$ is the control, and $f(\cdot)$ is the dynamics.
 
 Actually, $x$ and $u$ are signals:
-\[ x:[0,T]\to\mathbb{R}^n, \qquad u:[0,T]\to\mathbb{R}^m \]
+\[ x:[0,T]\to\R^n, \qquad  u:[0,T]\to\R^m \]
 
 \paragraph{Optimal control} find the ``best'' u!
 
@@ -786,7 +791,7 @@ After perturbation of $u$, the new system is
     \draw [thick,->] (5,0) -- (9.5,0) node [anchor=west] {$t$};
     \draw [thick,->] (5.5,-0.5) -- (5.5,3) node [anchor=east] {};
     \draw [decorate, decoration={random steps, segment length=8pt, amplitude=4pt}, rounded corners=3pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=200,out=0,distance=3cm] (9,1.5) node [anchor=south west] {$x(t)$};
-    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=2pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=170,out=30,distance=3cm] (9,2.5) node [anchor=south west] {$\hat x(t)$};
+    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=2pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=170,out=30,distance=3cm] (9,2.5) node [anchor=south,yshift=5pt] {$\hat x(t)=x+\varepsilon\eta+o(\varepsilon),\ \eta(0)=0$};
     \node [dot] at (5.5,0.75) {};
   \end{tikzpicture}
   \caption{Variation in $u$ causes a variation in $x$.}
@@ -829,13 +834,17 @@ where
     \end{enumerate}
   \end{proof}
 \end{thm}
-Note: Taylor expansion with two elements is
-\begin{align}
-  g(z_1+\varepsilon w_1,z_2+\varepsilon w_2) &= g(z_1,z_2+\varepsilon w_2) + \varepsilon\pder{g}{z_1}(z_1,z_2+\varepsilon w_2) w_1 + o(\varepsilon) \\
-                                       &= g(z_1,z_2) + \varepsilon\pder{g}{z_2}(z_1,z_2)w_2 + \varepsilon\pder{g}{z_1}(z_1,z_2)w_1 \\
-                                       & \qquad + \varepsilon^2\pder{^2 g}{z_2\partial z_1}(z_1,z_2)w_1w_2 + o(\varepsilon) \\
-                                       &= g(z_1,z_2) + \varepsilon\pder{g}{z_1}(z_1,z_2)w_1 + \varepsilon\pder{g}{z_2}(z_1,z_2)w_2 + o(\varepsilon)
-\end{align}
+
+\begin{framed}
+  \hypertarget{taylor_2var}{}
+  Note: Taylor expansion with two elements is
+  \begin{align}
+    h(w+\varepsilon v,z+\varepsilon y) &= h(w,z+\varepsilon y) + \pder{h}{w}(w,z+\varepsilon y)\varepsilon v + o(\varepsilon) \\
+                                       &= \left\{ h(w,z) + \pder{h}{z}(w,z)\varepsilon y + o(\varepsilon) \right\} \\
+                                       & \qquad + \left\{ \pder{h}{w}(w,z)\varepsilon v + \underbrace{\pder{^2 h}{z\partial w}\varepsilon v \odot \varepsilon y}_{o(\varepsilon)} + o(\varepsilon) \right\} \\
+                                       &= h(w,z) + \pder{h}{z}\varepsilon y + \pder{h}{w}\varepsilon v + o(\varepsilon)
+  \end{align}
+\end{framed}
 
 % 2017/01/26
 \paragraph{Last class:} \mbox{}
@@ -855,7 +864,7 @@ Note: Taylor expansion with two elements is
   \[ u \longmapsto u+\varepsilon \nu \]
   results in a variation in $x$:
   \[ x \longmapsto x+\varepsilon\eta + o(\varepsilon) \]
-  See Fig.~\ref{fig:var_u_x}. Note $\eta(0)=0$.
+  See \autoref{fig:var_u_x}. Note $\eta(0)=0$.
 \end{enumerate}
 
 \subsection{An (Almost) Optimal Control Problem}
@@ -918,7 +927,7 @@ Hence,
 We are free to pick $\lambda$ freely if it gives $\delta\tilde J=0$.
 \[ \text{Pick: } \begin{cases}
     \dot\lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
-    \lambda(T) = 0 & \text{backwards diff. eq.}
+    \lambda(T) = 0 & \text{backwards diff. eq:}
   \end{cases} \]
 Under this choice of $\lambda$ we get
 \[ \delta\tilde J(x_0;\nu) = \lambda\trans(0) \nu \]
@@ -1067,14 +1076,17 @@ When to switch between modes?
                                 & \qquad + \int_\tau^{\tau+\varepsilon\theta} \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_1(x+\varepsilon\eta)}_{f_1(x)+\varepsilon\pder{f_1}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t \\
                                 & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_2(x+\varepsilon\eta)}_{f_2(x)+\varepsilon\pder{f_2}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \displaybreak \\
   \delta\tilde J(\tau;\theta) &= \lim_{\varepsilon\to0} \frac{\tilde J(\tau+\varepsilon\theta) - \tilde J(\tau)}{\varepsilon} \\
-  \tilde J(\tau+\varepsilon\theta) - \tilde J(\tau) &= \int_0^\tau 0\cdot\dif t + \underbrace{ \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big(f_1(x)+\varepsilon\pder{f_1}{x}\eta - f_2(x) - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_1} \\[-3ex]
+  \tilde J(\tau+\varepsilon\theta) - \tilde J(\tau) &= \int_0^\tau 0\cdot\dif t + \underbrace{ \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big(f_1(x)+\varepsilon\pder{f_1}{x}\eta - f_2(x) - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_1} \\
                                 & \qquad + \underbrace{ \int_{\tau+\varepsilon\theta}^T \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_2} + o(\varepsilon)
 \end{align}
 
+\begin{framed}
 \begin{thm}[Mean-value theorem]
   \[ \int_{t_1}^{t_2} h(t) \dif t = (t_2-t_1) h(\xi) \quad \text{for some}\ \xi\in[t_1,t_2] \]
 \end{thm}
+\end{framed}
 
+\noindent
 The first integral is
 \begin{align}
   I_1 &= \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans (f_1(x)+\varepsilon\pder{f_1}{x}\eta-\varepsilon\dot\eta-f_x(x)) \right] \dif t \\
@@ -1128,5 +1140,114 @@ Where are we going? Come up with general principles for $\min_{u\in\mathcal U} J
 \end{itemize}
 
 % 2017/02/02
+\subsection{The Bolza Problem}
+Up until now, we have optimized with respect to finite-dimensional parameters. Today, we will minimize with respect to $u\in\mathcal U$.
+
+\begin{align}
+  & \min_{u\in\mathcal U} \int_0^T L(x(t),u(t),t) \dif t + \underbrace{\Psi(x(T))}_{\substack{\text{terminal cost}\\ \text{(parking cost)}}} \\
+  & \begin{aligned}
+    \text{s.t.}\quad \dot x(t) &= f(x(t),u(t),t) \\
+    x(0) &= x_0
+  \end{aligned}
+\end{align}
+Assume that $f$ and $L$ are $C^1$ in $x,u$ and piecewise continuous in $t$. Then, a small change in $u$ causes small changes in $f$ and $L$. The variation: $u\longmapsto u+\varepsilon v$, $\varepsilon\in\R$, $v\in\mathcal U$. See \autoref{fig:var_u_x}.
+\begin{align}
+  \tilde J(u) &= \int_0^T \left[ L(x,u,t) + \lambda\trans (f(x,u,t)-\dot x) \right] \dif t + \Psi(x(T)) \\
+  \tilde J(u+\varepsilon v) &= \int_0^T \left[ L(x+\varepsilon\eta,u+\varepsilon v, t) + \lambda\trans(f(x+\varepsilon\eta,u+\varepsilon v, t) - \dot x - \varepsilon\dot\eta) \right] \dif t \\
+              & \qquad + \Psi(x(T)+\varepsilon\eta(T)) + o(\varepsilon) \\
+  \tilde J(u+\varepsilon v) - \tilde J(u) &= \int_0^T \bigg[ L(x+\varepsilon\eta,u+\varepsilon v,t) - L(x,u,t) \\
+              & \qquad\qquad + \lambda\trans\Big( f(x+\varepsilon\eta,u+\varepsilon v,t) - f(x,u,t) - \dot x - \varepsilon\dot\eta + \dot x \Big) \bigg] \dif t \\
+              & \qquad + \Psi(x(T)+\varepsilon\eta(T)) - \Psi(x(T)) + o(\varepsilon) \\
+              &= \int_0^T \left[ \pder{L}{x}\varepsilon\eta + \pder{L}{u}\varepsilon v + \lambda\trans\bigg( \pder{f}{x}\varepsilon\eta + \pder{f}{u}\varepsilon v - \varepsilon\dot\eta \bigg) \right] \dif t \\
+              & \qquad + \pder{\Psi}{x}(x(T))\varepsilon\eta(T) + o(\varepsilon) \\
+  \shortintertext{(See \hyperlink{taylor_2var}{Taylor expansion with respect to two variables}.)}
+  \delta\tilde J(u;v) &= \int_0^T \left(\pder{L}{u} + \lambda\trans\pder{f}{u}\right)v\dif t + \int_0^T \left[\left(\pder{L}{x} + \lambda\trans\pder{f}{x}\right)\eta - \lambda\trans\dot\eta\right] \dif t \\
+              & \qquad + \pder{\Psi}{x}(x(T))\eta(T) \\
+  \shortintertext{Integrating by parts,}
+  \int_0^T \lambda\trans\dot\eta\dif t &= \lambda\trans(T)\eta(T) - \lambda\trans(0)\eta(0) - \int_0^T \dot\lambda\trans\eta \dif t \\
+              &= \lambda\trans(T)\eta(T) - \int_0^T \dot\lambda\trans\eta \dif t \\
+  \delta\tilde J(u;v) &= \int_0^T \left(\pder{L}{u}+\lambda\trans\pder{f}{u}\right) v\dif t + \int_0^T \left(\pder{L}{x}+\lambda\trans\pder{f}{x} + \dot\lambda\trans\right)\eta \dif t \\
+              & \qquad + \left(\pder{\Psi}{x}(x(T))-\lambda\trans(T)\right)\eta(T) \\
+  \intertext{For optimality, we need the directional derivative to be zero for every $v\in\mathcal U$, where $v$ represents the direction of the derivative. Therefore, the term $(\pder{L}{u}+\lambda\trans\pder{f}{u})$ in the first integral has to be identically zero. Thus, we need}
+  & \begin{dcases}
+    \pder{L}{u} + \lambda\trans\pder{f}{u} = 0, & \forall t\in[0,T] \\
+    \pder{L}{x} + \lambda\trans\pder{f}{x} + \dot\lambda\trans = 0, & \forall t\in[0,T] \\
+    \pder{\Psi}{x}(x(T)) - \lambda\trans(T) = 0
+  \end{dcases}
+\end{align}
+\begin{framed}
+  \begin{defi}
+    Let the \emph{Hamiltonian} $H(x,u,t,\lambda)$ be given by
+    \[ H(x,u,t,\lambda) = L(x,u,t) + \lambda\trans f(x,u,t) \]
+  \end{defi}
+\end{framed}
+\begin{thm}
+  For $u$ to solve the Bolza problem, it has to satisfy
+  \[ \pder{H}{u}(x,u,t,\lambda) = 0, \]
+  where the \emph{costate} satisfies
+  \[ \begin{dcases}
+    \dot\lambda = - \pder{H\trans}{x}(x,u,t,\lambda) \\
+    \lambda(T) = \pder{\Psi\trans}{x}(x(T))
+  \end{dcases} \]
+\end{thm}
+
+\paragraph{Example} \mbox{}
+\begin{align}
+  & \min_u \int_0^1 \frac12 u^2(t) \dif t + \frac12 x^2(1) \\
+  & \text{s.t. } \begin{cases}
+    \dot x = u, & x,u\in\R \\
+    x(0) = 1
+  \end{cases}
+\end{align}
+\begin{align}
+  H &= \frac12 u^2 + \lambda u \\
+  \pder{H}{u} &= u + \lambda = 0 \Longrightarrow u=-\lambda \\
+  \dot\lambda &= -\pder{H}{x} = 0 \Longrightarrow \lambda(t) = c \\
+  \lambda(T) &= c = \pder{\Psi}{x}(x(1)) = x(1) \\
+  \dot x &= u = -c \Longrightarrow x(t) = -ct + x(0) = -ct + 1 \\
+  x(1) &= -c + 1 \\
+  \lambda(1) &= c = x(1) = -c + 1 \Longrightarrow c = \frac12 \\
+  \Aboxed{u^* &= -\frac12}
+\end{align}
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
+    \draw [thick,->] (-0.5,5) -- (4,5) node [anchor=west] {$t$};
+    \draw [thick,->] (0,3.5) -- (0,6) node [anchor=south] {$u$};
+    \draw [thick,->] (0,-1) -- (0,2.5) node [anchor=south] {$x$};
+
+    \draw (-0.2,4) node [anchor=east] {$-\dfrac12$} -- (3.5,4);
+    \draw (3.5,4.8) -- (3.5,5.2) node [anchor=south] {$1$};
+
+    \draw (-0.2,2) node [anchor=east] {$1$} -- (0.2,2);
+    \draw (-0.2,1) node [anchor=east] {$\dfrac12$} -- (0.2,1);
+    \draw (3.5,-0.2) node [anchor=north] {$1$} -- (3.5,0.2);
+    \draw (0,2) -- (3.5,1);
+  \end{tikzpicture}
+\end{center}
+
+We really used five different equations to solve this!
+\begin{enumerate}[label=\roman*)]
+\item $\displaystyle \pder{H}{u} = 0$
+\item $\displaystyle \dot\lambda = - \pder{H\trans}{x}$
+\item $\displaystyle \lambda(T) = \pder{\Psi\trans}{x}(x(T))$
+\item $\dot x = f(x,u,t)$
+\item $x(0) = x_0$
+\end{enumerate}
+There is a sixth condition that is pretty useful if $L$ and $f$ do not depend on $t$ ($L(x,u)$, $f(x,u)$). This is called a \emph{conservative system}. Then, along optimal trajectories (equations i-v are satisfied), the total time derivative of the Hamiltonian is
+\[
+  \frac{\dif}{\dif t} H = \underbrace{\pder{H}{t}}_{\mathclap{\substack{0\\ H(x,u,\lambda)}}} + \underbrace{\pder{H}{x}}_{-\dot\lambda\trans} \dot x + \underbrace{\pder{H}{u}}_{\mathclap{\substack{0\\ \text{ $u$ is optimal}}}} \dot u + \underbrace{\pder{H}{\lambda}}_{\mathclap{f\trans=\dot x\trans}} \dot\lambda
+  = -\dot\lambda\trans \dot x + \dot x\trans \dot\lambda = 0
+\]
+Therefore, for conservative systems,
+\begin{enumerate}[resume*]
+\item $H$ is constant along optimal trajectories. (Hamilton's Principle in analytical mechanics)
+\end{enumerate}
+Back to the example,
+\[ H = \frac12 u^2 + \lambda u = \frac12 c^2 - c^2 = -\frac12 c^2 = -\frac18 \]
+
+% 2017/02/07
+
+% 2017/02/09
 
 \end{document}
