@@ -55,7 +55,10 @@
 \author{Klaus Z.\ Okkelberg}
 \date{Spring 2017}
 \maketitle
+
 \hypersetup{pageanchor=true}
+
+\tableofcontents
 
 \chapter{Parameter Optimization}
 
@@ -734,7 +737,7 @@ We can easily compute $\delta F(M;N)$!
 \begin{align}
   F(M+\varepsilon N) &= (M+\varepsilon N)(M+\varepsilon N) = M^2 + \varepsilon M N + \varepsilon N M + \varepsilon^2 N^2 \\
   \delta F(M;N) &= \lim_{\varepsilon\to0} \frac{F(M+\varepsilon N)-F(M)}{\varepsilon} \\
-                  &= \lim_{\varepsilon\to0} \frac{\varepsilon M N + \varepsilon N M + \varepsilon^2 N^2}{\varepsilon} = MN + NM
+                     &= \lim_{\varepsilon\to0} \frac{\varepsilon M N + \varepsilon N M + \varepsilon^2 N^2}{\varepsilon} = MN + NM
 \end{align}
 
 \paragraph{Infinite Dimensional Optimization}
@@ -750,10 +753,10 @@ Let $u\in\mathcal U$ (function space) and let $J(u)$ be the cost:
 \[ J(u) = \int_0^T L(u(t)) \dif t \]
 \begin{align}
   J(u+\varepsilon v) - J(u) &= \int_0^T L(u(t)+\varepsilon v(t)) \dif t - \int_0^T L(u(t)) \dif t, \quad u,v\in\mathcal U \\
-                         &= \int_0^T \left[ L(u(t)) + \varepsilon \pder{L}{u}(u(t)) v(t) + o(\varepsilon) - L(u(t)) \right] \dif t \\
+                            &= \int_0^T \left[ L(u(t)) + \varepsilon \pder{L}{u}(u(t)) v(t) + o(\varepsilon) - L(u(t)) \right] \dif t \\
   \delta J(u^*;v) &= \lim_{\varepsilon\to0} \frac{J(u+\varepsilon v)-J(u)}{\varepsilon} \\
-                         &= \lim_{\varepsilon\to0} \frac{\int_0^T \varepsilon \pder{L}{u}(u(t)) v(t) \dif t + o(\varepsilon)}{\varepsilon} \\
-                         &= \int_0^T \pder{L}{u}(u(t)) v(t) \dif t \\
+                            &= \lim_{\varepsilon\to0} \frac{\int_0^T \varepsilon \pder{L}{u}(u(t)) v(t) \dif t + o(\varepsilon)}{\varepsilon} \\
+                            &= \int_0^T \pder{L}{u}(u(t)) v(t) \dif t \\
 \end{align}
 $u^*$ optimizer:
 \begin{gather}
@@ -910,7 +913,7 @@ Note:
 
 \begin{align}
   \tilde J(x_0+\varepsilon \nu) &= \int_0^T \Big\{ L(x(t)) + \lambda\trans(t) [f(x(t)+\varepsilon\eta(t)) - \dot x(t) - \varepsilon\dot\eta(t)] \Big\} \dif t + o(\varepsilon) \\
-                           &= \int_0^T \left[ L(x) + \varepsilon\pder{L}{x}(x)\eta + \lambda\trans \left( f(x) + \varepsilon\pder{f}{x}(x)\eta - \dot x - \varepsilon\dot\eta \right) \right] \dif t + o(\varepsilon) \\
+                                &= \int_0^T \left[ L(x) + \varepsilon\pder{L}{x}(x)\eta + \lambda\trans \left( f(x) + \varepsilon\pder{f}{x}(x)\eta - \dot x - \varepsilon\dot\eta \right) \right] \dif t + o(\varepsilon) \\
   \tilde J(x_0+\varepsilon \nu) - \tilde J(x_0) &= \int_0^T \left[ \varepsilon\pder{L}{x}(x)\eta + \lambda\trans\left( \varepsilon\pder{f}{x}\eta - \varepsilon\dot\eta \right) \right] \dif t + o(\varepsilon) \\
   \delta \tilde J (x_0;\nu) &= \int_0^T \left[ \pder{L}{x}(x)\eta + \lambda\trans\left( \pder{f}{x}\eta - \dot\eta \right) \right] \dif t
 \end{align}
@@ -1070,27 +1073,27 @@ When to switch between modes?
 \end{enumerate}
 \begin{align}
   \tilde J(\tau+\varepsilon\theta) &= \int_0^{\tau+\varepsilon\theta} \Big\{ L(x+\varepsilon\eta) + \lambda\trans[f_1(x+\varepsilon\eta)-\dot x-\varepsilon\dot\eta] \Big\} \dif t \\
-                                & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ L(x+\varepsilon\eta) + \lambda\trans[f_2(x+\varepsilon\eta)-\dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \\
+                                   & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ L(x+\varepsilon\eta) + \lambda\trans[f_2(x+\varepsilon\eta)-\dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \\
   \intertext{Note that $\eta=\dot\eta=0$ on $[0,\tau)$.}
   \tilde J(\tau+\varepsilon\theta) &= \int_0^\tau \Big\{ L(x) + \lambda\trans[f_1(x)-\dot x] \Big\} \dif t \\
-                                & \qquad + \int_\tau^{\tau+\varepsilon\theta} \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_1(x+\varepsilon\eta)}_{f_1(x)+\varepsilon\pder{f_1}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t \\
-                                & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_2(x+\varepsilon\eta)}_{f_2(x)+\varepsilon\pder{f_2}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \displaybreak \\
+                                   & \qquad + \int_\tau^{\tau+\varepsilon\theta} \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_1(x+\varepsilon\eta)}_{f_1(x)+\varepsilon\pder{f_1}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t \\
+                                   & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_2(x+\varepsilon\eta)}_{f_2(x)+\varepsilon\pder{f_2}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \displaybreak \\
   \delta\tilde J(\tau;\theta) &= \lim_{\varepsilon\to0} \frac{\tilde J(\tau+\varepsilon\theta) - \tilde J(\tau)}{\varepsilon} \\
   \tilde J(\tau+\varepsilon\theta) - \tilde J(\tau) &= \int_0^\tau 0\cdot\dif t + \underbrace{ \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big(f_1(x)+\varepsilon\pder{f_1}{x}\eta - f_2(x) - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_1} \\
-                                & \qquad + \underbrace{ \int_{\tau+\varepsilon\theta}^T \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_2} + o(\varepsilon)
+                                   & \qquad + \underbrace{ \int_{\tau+\varepsilon\theta}^T \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_2} + o(\varepsilon)
 \end{align}
 
 \begin{framed}
-\begin{thm}[Mean-value theorem]
-  \[ \int_{t_1}^{t_2} h(t) \dif t = (t_2-t_1) h(\xi) \quad \text{for some}\ \xi\in[t_1,t_2] \]
-\end{thm}
+  \begin{thm}[Mean-value theorem]
+    \[ \int_{t_1}^{t_2} h(t) \dif t = (t_2-t_1) h(\xi) \quad \text{for some}\ \xi\in[t_1,t_2] \]
+  \end{thm}
 \end{framed}
 
 \noindent
 The first integral is
 \begin{align}
   I_1 &= \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans (f_1(x)+\varepsilon\pder{f_1}{x}\eta-\varepsilon\dot\eta-f_x(x)) \right] \dif t \\
-  &= \varepsilon\theta \Big\{ \lambda\trans(\xi) \big[ f_1(x(\xi)) - f_2(x(\xi)) \big] \Big\} + o(\varepsilon)
+      &= \varepsilon\theta \Big\{ \lambda\trans(\xi) \big[ f_1(x(\xi)) - f_2(x(\xi)) \big] \Big\} + o(\varepsilon)
 \end{align}
 Note that as $\varepsilon\to0$, $\xi\to\tau$. Using integration by parts, the second integral is
 \begin{align}
@@ -1169,11 +1172,11 @@ Assume that $f$ and $L$ are $C^1$ in $x,u$ and piecewise continuous in $t$. Then
   \delta\tilde J(u;v) &= \int_0^T \left(\pder{L}{u}+\lambda\trans\pder{f}{u}\right) v\dif t + \int_0^T \left(\pder{L}{x}+\lambda\trans\pder{f}{x} + \dot\lambda\trans\right)\eta \dif t \\
               & \qquad + \left(\pder{\Psi}{x}(x(T))-\lambda\trans(T)\right)\eta(T) \\
   \intertext{For optimality, we need the directional derivative to be zero for every $v\in\mathcal U$, where $v$ represents the direction of the derivative. Therefore, the term $(\pder{L}{u}+\lambda\trans\pder{f}{u})$ in the first integral has to be identically zero. Thus, we need}
-  & \begin{dcases}
-    \pder{L}{u} + \lambda\trans\pder{f}{u} = 0, & \forall t\in[0,T] \\
-    \pder{L}{x} + \lambda\trans\pder{f}{x} + \dot\lambda\trans = 0, & \forall t\in[0,T] \\
-    \pder{\Psi}{x}(x(T)) - \lambda\trans(T) = 0
-  \end{dcases}
+              & \begin{dcases}
+                \pder{L}{u} + \lambda\trans\pder{f}{u} = 0, & \forall t\in[0,T] \\
+                \pder{L}{x} + \lambda\trans\pder{f}{x} + \dot\lambda\trans = 0, & \forall t\in[0,T] \\
+                \pder{\Psi}{x}(x(T)) - \lambda\trans(T) = 0
+              \end{dcases}
 \end{align}
 \begin{framed}
   \begin{defi}
@@ -1186,9 +1189,9 @@ Assume that $f$ and $L$ are $C^1$ in $x,u$ and piecewise continuous in $t$. Then
   \[ \pder{H}{u}(x,u,t,\lambda) = 0, \]
   where the \emph{costate} satisfies
   \[ \begin{dcases}
-    \dot\lambda = - \pder{H\trans}{x}(x,u,t,\lambda) \\
-    \lambda(T) = \pder{\Psi\trans}{x}(x(T))
-  \end{dcases} \]
+      \dot\lambda = - \pder{H\trans}{x}(x,u,t,\lambda) \\
+      \lambda(T) = \pder{\Psi\trans}{x}(x(T))
+    \end{dcases} \]
 \end{thm}
 
 \paragraph{Example} \mbox{}
@@ -1399,10 +1402,10 @@ Problem: we can do this for any $c$. Which $c$ is it? \emph{Last 15 minutes was 
 
 Back to $u=F(r,\lambda)$. Assume we have $F$ (numerically).
 \begin{align}
-    \frac{\dif r}{\dif x} &= -F(r,\lambda) \\
-    r(0) &= a \\
-    \frac{\dif\lambda}{\dif x} &= -\frac{F^3(r,\lambda)}{1+F^2(r,\lambda)} \\
-    \lambda(\ell) &= r(\ell)
+  \frac{\dif r}{\dif x} &= -F(r,\lambda) \\
+  r(0) &= a \\
+  \frac{\dif\lambda}{\dif x} &= -\frac{F^3(r,\lambda)}{1+F^2(r,\lambda)} \\
+  \lambda(\ell) &= r(\ell)
 \end{align}
 The mistake before was that the simulation forward from $a$ depends on $\lambda$. 
 \begin{center}
@@ -1427,5 +1430,193 @@ Therefore, we should guess $\lambda_0$ and simulate both $r$ and $\lambda$ to ge
 for optimality. To do this, we need numerics.
 
 % 2017/02/09
+\paragraph{Terminal Constraints} \mbox{}
+
+Let $x=[x_1,\dots,x_n]\trans\in\R^n$ and solve
+\begin{align}
+  & \min_{u\in\mathcal U} \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  & \text{s.t. } \begin{aligned}[t]
+    \dot x &= f(x,u,t) \\
+    x(0) &= x_0 \\
+    x_i(T) &= x_{iT} \quad \text{given for } i\in\mathcal T \subset \{1,\dots,n\}
+  \end{aligned}
+\end{align}
+First, we augment the cost:
+\begin{align}
+  \tilde J(u) &= \int_0^T \big[ L + \lambda\trans (f-\dot x) \big] \dif t + \Psi \\
+              &= \int_0^T (H-\lambda\trans\dot x) \dif t + \Psi \\
+  \tilde J (u+\varepsilon v) - \tilde J(u) &= \int_0^T \left( \varepsilon\pder{H}{u} v + \varepsilon\pder{H}{x}\eta - \varepsilon\lambda\trans\dot\eta \right) \dif t + \varepsilon\pder{\Psi}{x}(x(T))\eta(T) + o(\varepsilon) \\
+  \delta\tilde J(u;v) &= \int_0^T \left( \pder{H}{x} + \dot\lambda\trans \right)\eta\dif t + \int_0^T \pder{H}{u}v\dif t \\
+              & \qquad + \lambda\trans(0)\eta(0) - \lambda\trans(T)\eta(T) + \pder{\Psi}{x}(x(T))\eta(T)
+\end{align}
+As always,
+\begin{align}
+  \dot\lambda &= -\pder{H\trans}{x} \\
+  \pder{H}{u} &= 0 \quad \text{(FONC)}
+\end{align}
+Additionally,
+\begin{align}
+  \eta(0) &= 0 \\
+  \eta_i(T) &= 0 \quad \text{for } i\in\mathcal T
+\end{align}
+Note that if $x(T)=x_T$ is given, then $x(T)=x(T)+\varepsilon\eta(T)+o(\varepsilon)$, so $\eta(T)=0$. Here, we have $x_i(T)=x_{iT}$ fixed for $i\in\mathcal T$ so $\eta_i(T)=0$ for $i\in\mathcal T$.
+
+For optimality, we want
+\begin{gather}
+  \left[ -\lambda\trans(T) + \pder{\Psi}{x}(x(T)) \right] \eta(T) = 0 \quad \text{for all \emph{admissible} variations} \\
+  \begin{bmatrix}
+    \displaystyle \pder{\Psi}{x_1}-\lambda_1, & \cdots, & \displaystyle \pder{\Psi}{x_n}-\lambda_n
+  \end{bmatrix}
+  \begin{bmatrix}
+    \eta_1(T) \\
+    \vdots \\
+    \eta_n(T)
+  \end{bmatrix} = 0
+\end{gather}
+Hence, we need
+\begin{alignat}{2}
+  \lambda_j(T) &= \pder{\Psi}{x_j}(x(T)) \quad & \text{if } j\not\in\mathcal T \\
+  \lambda_i(T) &= \text{free} & \text{if } i\in\mathcal T
+\end{alignat}
+So we have
+\[ \begin{dcases}
+    \dot x = f \\
+    \dot\lambda = -\pder{H\trans}{x},
+  \end{dcases} \]
+an ODE with $2n$ variables. We need $2n$ boundary conditions for this ODE to be well-posed.
+\begin{center}
+  \begin{tabular}{lclc}
+    \toprule
+    \multicolumn{2}{c}{At $t=0$} & \multicolumn{2}{c}{At $t=T$} \\
+    \cmidrule(r){1-2} \cmidrule(l){3-4}
+    $x(0)=x_0$ & $[n]$ & $x_i(T)=x_{iT}$, $i\in\mathcal T$ & $[q]$ \\
+                                 && $\phantom{x_i(T)=x_{iT}}$ $|\mathcal T|=q$ \\
+                                 && $x_j(T)$ free, $j\not\in\mathcal T$ & $[0]$ \\
+    $\lambda(0)$ free & $[0]$ & $\lambda_i(T)$ free, $i\in\mathcal T$ & $[0]$ \\
+                                 && $\lambda_j(T)=\displaystyle\pder{\Psi}{x_j}(x(T))$, $j\not\in\mathcal T$ & $[n-q]$ \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+So we have $n+q+(n-q)=2n$ boundary conditions.
+
+We could even fix some but not all of $x(0)$, i.e.
+\begin{alignat}{2}
+  x_i(0) &= x_{i0} & \text{if } i\in\mathcal I \\
+  x_j(0) &= \text{free} \quad & \text{if } j\not\in\mathcal I
+\end{alignat}
+Recall,
+\[
+  \delta\tilde J(u;v) = \int_0^T\! \left(\pder{H}{x} + \dot\lambda\trans \right)\eta\dif t + \int_0^T\! \pder{H}{u} v \dif t + \lambda\trans(0)\eta(0) + \left[\lambda\trans(T)-\pder{\Psi}{x}(x(T))\right] \eta(T)
+\]
+For $x_i(0)=x_{i0}$ fixed, we have $\eta_i(0)=0$ and $\lambda_i(0)$ free. For $x_j(0)$ free, we have $\eta_j(0)$ free and $\lambda_j(0)=0$.
+
+To ponder, what if $J=\int\! L\dif t + \Psi(x(T)) + \Theta(x(0))$?
+
+To summarize, the minimizer to
+\begin{align}
+  & \min_{u\in\mathcal U} \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  & \text{s.t. } \begin{aligned}[t]
+    \dot x &= f(x,u,t) \\
+    x_i(0) &= x_{i0}, \quad i\in\mathcal I \\
+    x_j(T) &= x_{jT} \quad j\in\mathcal T
+  \end{aligned}
+\end{align}
+has to satisfy
+\begin{align}
+  & \pder{H}{u} = 0 \\
+  & \dot\lambda = -\pder{H\trans}{x} \\
+  & \lambda_i(0) = 0, \quad i\not\in\mathcal I \\
+  & \lambda_j(T) = \pder{\Psi}{x_j}(x(T)), \quad j\not\in\mathcal T
+\end{align}
+
+\paragraph{Example}
+\begin{align}
+  & \frac{\dif}{\dif t} \begin{bmatrix}
+    x_1 \\ x_2 \\ x_3 \\ x_4
+  \end{bmatrix} = f(x_1,x_2,x_3,x_4) \\
+  & x_1(0)=1,\, x_3(0)=7,\, x_4(0)=0,\, x_1(1)=2 \\
+  & \mathcal I = \{1,3,4\},\, \mathcal T = \{1\} \\
+  & \min \int_0^1 L(x,u)\dif t + \big(x_2^2(1) - x_3^2(1) + 7x_1(1) + 14 \big)
+\end{align}
+Note there are 4 boundary conditions on $x$ so there must be 4 boundary conditions on $\lambda$:
+\begin{alignat}{4}
+  & \lambda_1(0) \text{ free/unspecified} & \qquad & \lambda_1(1) \text{ free} \\
+  & \lambda_2(0) = 0 && \lambda_2(1) = 2x_2(1) \\
+  & \lambda_3(0) \text{ free} && \lambda_3(1) = -2x_3(1) \\
+  & \lambda_4(0) \text{ free} && \lambda_4(1) = 0
+\end{alignat}
+
+\paragraph{Example} \mbox{}
+
+A force $f$ acts on a particle at position $(x,y)$ ($\text{mass}=1$).
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (4,0) node [anchor=west] {$x$};
+    \draw [thick,->] (0,-0.5) -- (0,4) node [anchor=south] {$y$};
+    \draw (0.5,1) parabola [bend at end] (3.5,3);
+    \node [dot] (x) at (2,2.5) {};
+    \node [anchor=north west] at (x) {$(x,y)$};
+    \draw [->] (x) -- ++(55:2) node [anchor=west] {$f$};
+    \draw ($(x)+(55:0.75)$) arc (55:0:0.75);
+    \node at ($(x)+(40:1)$) {$\alpha$};
+    \draw (x) -- ++(1.25,0);
+  \end{tikzpicture}
+\end{center}
+\begin{align}
+  \dot x &= v_x \\
+  \dot y &= v_y \\
+  \dot v_x &= |f|\cos\alpha \\
+  \dot v_y &= |f|\sin\alpha \\
+  \alpha &= \text{control variable}
+\end{align}
+Assume we only care about where the particle ends up (to be specified later), i.e.\ $L=0$.
+\[
+  H = \begin{bmatrix}
+    \lambda_x & \lambda_y & \lambda_{v_x} & \lambda_{v_y}
+  \end{bmatrix}
+  \begin{bmatrix}
+    v_x \\ v_y \\ |f|\cos\alpha \\ |f|\sin\alpha
+  \end{bmatrix}
+\]
+\begin{alignat}{3}
+  \dot\lambda_x &= -\pder{H}{x} = 0 && \Longrightarrow & \lambda_x(t) &= c_1 \\
+  \dot\lambda_y &= -\pder{H}{y} = 0 && \Longrightarrow & \lambda_y(t) &= c_2 \\
+  \dot\lambda_{v_x} &= -\pder{H}{v_x} = -\lambda_x && \Longrightarrow & \lambda_{v_x}(t) &= -c_1 t + c_3 \\
+  \dot\lambda_{v_y} &= -\pder{H}{v_y} = -\lambda_y \quad && \Longrightarrow & \quad \lambda_{v_y}(t) &= -c_2 t + c_4
+\end{alignat}
+Moreover,
+\begin{align}
+  \pder{H}{\alpha} &= -\lambda_{v_x} |f| \sin\alpha + \lambda_{v_y} |f| \cos\alpha = 0 \\
+  \tan\alpha &= \frac{\lambda_{v_y}}{\lambda_{v_x}} = \frac{-c_2t+c_4}{-c_1t+c_3}
+\end{align}
+We want to drive the particle from $[0,0,0,0]\trans$ to a path parallel to the x-axis with $y(T)=h$.
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (5.5,0) node [anchor=west] {$x$};
+    \draw [thick,->] (0,-0.5) -- (0,3) node [anchor=south] {$y$};
+    \draw [thick] (0.2,2) -- (-0.2,2) node [anchor=east] {$h$};
+    \draw (0,0) parabola [bend at end] (3.5,2) -- ++(0.5,0) coordinate (x);
+    \node [dot] at (x) {};
+    \node [anchor=south] at (x) {$t=T$};
+  \end{tikzpicture}
+\end{center}
+Choose $\Psi=-v_x$,
+\begin{alignat}{2}
+  y(T) &= h & v_y(T) &= 0 \\
+  x(T) & \text{ free} \quad & v_x(T) &\phantom{x} \text{free, but costs} \\
+  \lambda_i(0) & \text{ free} \\
+  \lambda_y(T) & \text{ free} & \lambda_{v_y}(T) & \text{ free} \\
+  \lambda_x(T) &= 0 & \lambda_{v_x}(T) &= -1
+\end{alignat}
+\begin{align}
+  c_1 &= \lambda_x(t) = 0 \\
+  \Longrightarrow \lambda_{v_x} &= -c_1t + c_3 = c_3 = -1 \\
+  \Longrightarrow \tan\alpha &= -\frac{-c_2t+c_4}{-1} = c_2t + c_4
+\end{align}
+How do we find $c_2$ and $c_4$? Plug into $\dot x$ and $\dot\lambda$ and try to satisfy the remaining boundary conditions. (This is hard=numerics.)
+
+% 2017/02/14
 
 \end{document}
