@@ -905,7 +905,7 @@ Note:
 \hspace{\parindent}
 \begin{tabular}{cl}
   $x_0$ & decision variable \\
-  $\eta$ & variation in $x_0$ \\
+  $\nu$ & variation in $x_0$ \\
   $x(t)$ & trajectory starting at $x_0$ \\
   $\eta(t)$ & change in trajectory resulting from $\nu$-variation in $x_0$ \\
   $\lambda(t)$ & time-varying Lagrange multiplier
@@ -930,7 +930,7 @@ Hence,
 We are free to pick $\lambda$ freely if it gives $\delta\tilde J=0$.
 \[ \text{Pick: } \begin{cases}
     \dot\lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
-    \lambda(T) = 0 & \text{backwards diff. eq:}
+    \lambda(T) = 0 & \text{backwards diff. eq}
   \end{cases} \]
 Under this choice of $\lambda$ we get
 \[ \delta\tilde J(x_0;\nu) = \lambda\trans(0) \nu \]
@@ -1092,7 +1092,7 @@ When to switch between modes?
 \noindent
 The first integral is
 \begin{align}
-  I_1 &= \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans (f_1(x)+\varepsilon\pder{f_1}{x}\eta-\varepsilon\dot\eta-f_x(x)) \right] \dif t \\
+  I_1 &= \int_\tau^{\tau+\varepsilon\theta} \left\{ \varepsilon\pder{L}{x}\eta + \lambda\trans \left[f_1(x)+\varepsilon\pder{f_1}{x}\eta-\varepsilon\dot\eta-f_2(x)\right] \right\} \dif t \\
       &= \varepsilon\theta \Big\{ \lambda\trans(\xi) \big[ f_1(x(\xi)) - f_2(x(\xi)) \big] \Big\} + o(\varepsilon)
 \end{align}
 Note that as $\varepsilon\to0$, $\xi\to\tau$. Using integration by parts, the second integral is
