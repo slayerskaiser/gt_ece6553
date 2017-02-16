@@ -1619,4 +1619,54 @@ How do we find $c_2$ and $c_4$? Plug into $\dot x$ and $\dot\lambda$ and try to 
 
 % 2017/02/14
 
+% 2017/02/16
+\section{Numerical Methods}
+Optimal control boils down to solving two sets of differential equations:
+\begin{align}
+  \dot x &= f(x,u) & \pder{H}{u}(x,u,\lambda) &= 0 \\
+  \lambda &= -\pder{H\trans}{x}(x,u,\lambda) & u &= F(x,\lambda) \\
+  \Longrightarrow & \begin{dcases}
+    \dot x = f(x,F(x,\lambda)) \\
+    \dot \lambda = -\pder{H\trans}{x}(x,F(x,\lambda),\lambda)
+  \end{dcases}
+\end{align}
+The equations are functions of $x$ and $\lambda$. They are completely determined by the boundary conditions on $x(0)$, $x(T)$, $\lambda(0)$, $\lambda(T)$. This is known as the \emph{Boundary Value Problem}.
+
+How do we solve this? Test shooting
+\begin{itemize}
+\item Guess initial conditions
+\item Simulate forward in time
+\item Update the guess (clearly\dots)
+\end{itemize}
+
+% missed portion
+
+\paragraph{Algorithm}
+Guess $\lambda_0$ and solve for $x(t)$, $\lambda(t)$.
+% figure
+Let's define a cost:
+\[ \Vert \lambda(T) - \pder{\Psi\trans}{x}(x(T)) \Vert^2 = g(\lambda_0) \]
+Update $\lambda_0$ through
+\[ \lambda_0 \coloneqq \lambda_0 - \underbracket[0pt]{\gamma}_{\mathclap{\substack{\uparrow\\ \text{\normalsize any choice of step size works}}}} \pder{g\trans}{\lambda_0}(\lambda_0) \]
+Repeat
+
+% missing?
+
+Let $e_1$ be the $i$th unit vector, $i=1,\dots,n$:
+\[ e_1 = \begin{bmatrix}
+    1 \\ 0 \\ \vdots \\ 0
+  \end{bmatrix},
+  e_2 = \begin{bmatrix}
+    0 \\ 1 \\ \vdots \\ 0
+  \end{bmatrix},
+  \dots,
+  e_n = \begin{bmatrix}
+    0 \\ 0 \\ \vdots \\ 1
+  \end{bmatrix} \]
+
+% missing
+
+\paragraph{Example}
+
+
 \end{document}
