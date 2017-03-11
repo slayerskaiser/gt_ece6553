@@ -1313,6 +1313,7 @@ So,
 Therefore, the total energy (kinetic plus potential energy) remains constant for conservative systems.
 
 \paragraph{Example} minimum drag nose shape (Newton 1686)
+  \hypertarget{newton_nose_shape}{}
 
 \begin{center}
   \begin{tikzpicture}
@@ -1431,6 +1432,7 @@ for optimality. To do this, we need numerics.
 
 % 2017/02/09
 \paragraph{Terminal Constraints} \mbox{}
+\hypertarget{fixed_term_cons}{}
 
 Let $x=[x_1,\dots,x_n]\trans\in\R^n$ and solve
 \begin{align}
@@ -1869,51 +1871,172 @@ As a preview, we need to find $\lambda$ as a function of $x$. For example, $u=-R
 % 2017/02/16
 \section{Numerical Methods}
 Optimal control boils down to solving two sets of differential equations:
-\begin{align}
-  \dot x &= f(x,u) & \pder{H}{u}(x,u,\lambda) &= 0 \\
-  \lambda &= -\pder{H\trans}{x}(x,u,\lambda) & u &= F(x,\lambda) \\
-  \Longrightarrow & \begin{dcases}
-    \dot x = f(x,F(x,\lambda)) \\
-    \dot \lambda = -\pder{H\trans}{x}(x,F(x,\lambda),\lambda)
-  \end{dcases}
-\end{align}
-The equations are functions of $x$ and $\lambda$. They are completely determined by the boundary conditions on $x(0)$, $x(T)$, $\lambda(0)$, $\lambda(T)$. This is known as the \emph{Boundary Value Problem}.
-
-How do we solve this? Test shooting
-\begin{itemize}
+\begin{gather}
+    \begin{aligned}
+        \dot x &= f(x,u) & \quad & \pder{H}{u}(x,u,\lambda) = 0 \\
+        \dot\lambda &= -\pder{H\trans}{x}(x,u,\lambda) && u = F(x,\lambda) \\
+    \end{aligned} \\
+    \Longrightarrow \begin{dcases}
+        \dot x = f(x,F(x,\lambda)) \\
+        \dot \lambda = -\pder{H\trans}{x}(x,F(x,\lambda),\lambda)
+    \end{dcases}
+\end{gather}
+The equations are functions of $x$ and $\lambda$. They are completely determined by the boundary conditions on $x(0)$, $x(T)$, $\lambda(0)$, $\lambda(T)$. This is known as the \emph{Boundary Value Problem}. This is solved using \emph{test shooting}:
+\begin{enumerate}
 \item Guess initial conditions
 \item Simulate forward in time
-\item Update the guess (clearly\dots)
-\end{itemize}
+\item Update the guess (cleverly\dots)
+\end{enumerate}
 
-% missed portion
+\paragraph{Exmaple:} Bolza problem
+\begin{align}
+    & \min_{u\in\mathcal U} \int_0^T L(x,u)\dif t + \Psi(x(T)) \\
+    & \text{s.t. } \begin{cases}
+    \dot x=f(x,u) \\
+    x(0) = x_0
+\end{cases} \\
+& H(x,u,\lambda) = L(x,u) + \lambda\trans f(x,u) \\
+& u^* (x,\lambda) \text{ satisfies } \pder{H}{u} = 0
+\end{align}
+The optimal control satisfies
+\begin{gather}
+    \begin{dcases}
+        x = f(x,u^*(x,\lambda)) \\
+        x(0) = x_0 \\
+        \lambda = -\pder{H\trans}{x} (x,u^*(x,\lambda),\lambda) \\
+        \lambda(T) = \pder{\Psi}{x}(x(T))
+    \end{dcases}
+\end{gather}
 
 \paragraph{Algorithm}
 Guess $\lambda_0$ and solve for $x(t)$, $\lambda(t)$.
-% figure
+\begin{center}
+    \begin{tikzpicture}
+        \draw [thick,->] (-0.5,0) -- (5,0);
+        \draw [thick,->] (0,-0.5) -- (0,3);
+        \draw (0,1) node [anchor=east] {$x_0$} .. controls (1,1.5) and (3,0.5) .. (4.5,1.2) node [anchor=west] {$x(T)$};
+        \draw (0,2) node [anchor=east] {$\lambda_0$} .. controls (2,1.5) and (4,3) .. (4.5,2.5) node [anchor=west] {$\lambda(T)$};
+    \end{tikzpicture}
+\end{center}
 Let's define a cost:
-\[ \Vert \lambda(T) - \pder{\Psi\trans}{x}(x(T)) \Vert^2 = g(\lambda_0) \]
+\[ \left\Vert \lambda(T) - \pder{\Psi\trans}{x}(x(T)) \right\Vert^2 = g(\lambda_0) \]
 Update $\lambda_0$ through
 \[ \lambda_0 \coloneqq \lambda_0 - \underbracket[0pt]{\gamma}_{\mathclap{\substack{\uparrow\\ \text{\normalsize any choice of step size works}}}} \pder{g\trans}{\lambda_0}(\lambda_0) \]
 Repeat
 
-% missing?
+\medskip
 
-Let $e_1$ be the $i$th unit vector, $i=1,\dots,n$:
-\[ e_1 = \begin{bmatrix}
+\noindent
+Problem: What is $\partial g/\partial\lambda_0$? We estimate $\partial g/\partial\lambda_0$ numerically. This is where ``test shooting'' comes into play.
+
+Let $e_i$ be the $i$th unit vector, $i=1,\dots,n$:
+\begin{gather}
+    e_1 = \begin{bmatrix}
     1 \\ 0 \\ \vdots \\ 0
-  \end{bmatrix},
+  \end{bmatrix}\!,\ 
   e_2 = \begin{bmatrix}
     0 \\ 1 \\ \vdots \\ 0
-  \end{bmatrix},
-  \dots,
+  \end{bmatrix}\!,\ 
+  \dots,\ 
   e_n = \begin{bmatrix}
     0 \\ 0 \\ \vdots \\ 1
-  \end{bmatrix} \]
+  \end{bmatrix} \\
+  \pder{g}{\lambda_0} = \left( \pder{g}{\lambda_{0,1}},\pder{g}{\lambda_{0,2}},\dots,\pder{g}{\lambda_{o,n}} \right)
+\end{gather}
+The $i$th component of $\partial g/\partial\lambda_0$ is given by the directional derivative
+\[
+    \pder{g}{\lambda_{0,i}} = \pder{g}{\lambda_0} \cdot e_i = \delta g(\lambda_0;e_i) = \lim_{\varepsilon\to0} \frac{g(\lambda_0+\varepsilon e_i) - g(\lambda_0)}{\varepsilon}
+\]
+So, if $x\in\R^n$ (and thus so is $\lambda_0$), we have to do this $n$ times (with a small $\varepsilon$) and get the full derivative $\partial g/\partial\lambda_0$.
 
-% missing
+\paragraph{Algorithm} \mbox{}
+\begin{algorithm}
+    \begin{algorithmic}
+        \State Given $\lambda_0$, $g(\lambda_0)$
+        \For {$i=1$ to $n$}
+        \State Compute $g(\lambda_0+\varepsilon e_i)$
+        \State $dg_i = \dfrac{1}{\varepsilon} [g(\lambda_0+\varepsilon e_i) - g(\lambda_0)]$
+        \EndFor
+        \smallskip
+        \State $\displaystyle\pder{g}{\lambda_0} = [dg_1,\dots,dg_n]$
+    \end{algorithmic}
+\end{algorithm}
 
-\paragraph{Example}
+\paragraph{Example} LQ
+\begin{align}
+    & \min_u \frac12 \int_0^1 (x\trans Qx + u\trans Ru) \dif t + \frac12 x\trans(1)Sx(1) \\
+    & \text{s.t. } \begin{dcases}
+        \dot x = Ax + Bu \\
+        x(0) = x_0
+    \end{dcases} \\
+    & \phantom{\text{s.t. }} Q,R,S \succ 0
+\end{align}
+\begin{align}
+    H &= \frac12 x\trans Qx + \frac12 u\trans Ru + \lambda\trans(Ax+Bu) \\
+    \pder{H}{u} &= u\trans R + \lambda\trans B = 0 \\
+    u^* &= -R^{-1}B\trans \lambda \\
+    \dot\lambda &= -\pder{H\trans}{x} = -Qx - A\trans\lambda \\
+    \lambda(1) &= \pder{\Psi\trans}{x}(x(1)) = Sx(1)
+\end{align}
+So putting it all together,
+\begin{alignat}{2}
+    \dot x &= Ax - BR^{-1}B\trans\lambda \qquad & x(0) &= x_0 \\
+    \dot\lambda &= -Qx - A\trans\lambda & \lambda(1) &= Sx(1)
+\end{alignat}
 
+\paragraph{Example} Newton's nose shape problem (\hyperlink{newton_nose_shape}{revisited, see previous})
+
+\begin{align}
+    & \min_u \int_0^\ell \frac{ru^3}{1+u^2}\dif x + \frac12 r(\ell)^2 \\
+    & \text{s.t. } \frac{\dif r}{\dif x} = -u \qquad r(0) = a
+\end{align}
+\begin{align}
+    H &= \frac{ru^3}{1+u^2} + \lambda(-u) \\
+    \pder{H}{u} &= \frac{ru^2(3+u^2)}{(1+u^2)^2} - \lambda = 0 \\
+    \shortintertext{We solve the above numerically to get $u^*(r,\lambda)$.}
+    \pder{\lambda}{x} &= -\pder{H}{r} = -\frac{u^3}{1+u^2} \\
+    \lambda(\ell) &= r(\ell)
+\end{align}
+So, we have
+\begin{alignat}{3}
+    \frac{\dif r}{\dif x} &= -u & r(0) &= a & u &= F(x,\lambda) \\
+    \frac{\dif\lambda}{\dif x} &= -\frac{u^3}{1+u^2} \qquad & \lambda(\ell) &= r(\ell) \qquad
+\end{alignat}
+
+\paragraph{Example} Fixed terminal constraints (\hyperlink{fixed_term_cons}{revisited, see previous})
+
+\begin{align}
+    & \min_\alpha -v_x(T) \qquad \alpha=\text{control} \\
+    & \text{s.t. } \begin{aligned}[t]
+    \dot x &= v_x & x(0) &= 0 \\
+    \dot y &= v_y & y(0) &= 0 \\
+    \dot v_x &= |f|\cos\alpha & v_x(0) &= 0 \\
+    \dot v_y &= |f|\sin\alpha & v_y(0) &= 0 \\
+    y(T) &= h \\
+    v_y(T) &= 0
+    \end{aligned}
+\end{align}
+\begin{align}
+    H &= -v_x(T) + \begin{bmatrix}
+        \lambda_x & \lambda_y & \lambda_{v_x} & \lambda_{v_y}
+    \end{bmatrix}
+    \begin{bmatrix}
+        v_x \\ v_y \\ |f|\cos\alpha \\ |f|\sin\alpha
+    \end{bmatrix} \\
+    \frac{\dif H}{\dif\alpha} &= 0 \Rightarrow \tan\alpha = \frac{\lambda_{v_y}}{\lambda_{v_x}} \\
+    \dot\lambda_x &= 0 \\
+    \dot\lambda_y &= 0 \\
+    \dot\lambda_{v_x} &= -\lambda_x \\
+    \dot\lambda_{v_y} &= -\lambda_y \\
+    \bm\lambda(0) & \text{ unspecified} \\
+    \lambda_x(T) &= \pder{\Psi\trans}{x}(x(T)) = 0 \\
+    \lambda_y(T) & \text{ unspecified} \\
+    \lambda_{v_x}(T) &= \pder{\Psi\trans}{v_x}(v_x(T)) = -1 \\
+    \lambda_{v_y}(T) & \text{ unspecified}
+\end{align}
+Again, we guess $\lambda_0$ and solve forward in time. But, we have terminal constraints on $y$ and $v_y$ as well.
+\begin{gather}
+    q(\lambda_0) = \frac12 \Big[ (y(T)-h)^2 + (v_y(T))^2 + (\lambda_x(T))^2 + (\lambda_{v_x}+1)^2 \Big]
+\end{gather}
 
 \end{document}
