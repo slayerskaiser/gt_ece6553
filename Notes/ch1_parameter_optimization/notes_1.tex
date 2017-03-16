@@ -15,6 +15,8 @@
 \pgfplotsset{compat=1.9}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{adjustbox}
+\usepackage{array}
 
 \usepackage[pdfpagelabels]{hyperref}
 
@@ -1313,7 +1315,7 @@ So,
 Therefore, the total energy (kinetic plus potential energy) remains constant for conservative systems.
 
 \paragraph{Example} minimum drag nose shape (Newton 1686)
-  \hypertarget{newton_nose_shape}{}
+\hypertarget{newton_nose_shape}{}
 
 \begin{center}
   \begin{tikzpicture}
@@ -1815,10 +1817,10 @@ We have the Hamiltonian Dynamics:
     \dot x \\ \dot\lambda
   \end{bmatrix} =
   \underbrace{
-    \begin{bmatrix}
-      A & -BB\trans \\
-      0 & -A\trans
-    \end{bmatrix}
+      \begin{bmatrix}
+        A & -BB\trans \\
+        0 & -A\trans
+      \end{bmatrix}
   }_{M}
   \begin{bmatrix}
     x \\ \lambda
@@ -1872,14 +1874,14 @@ As a preview, we need to find $\lambda$ as a function of $x$. For example, $u=-R
 \section{Numerical Methods}
 Optimal control boils down to solving two sets of differential equations:
 \begin{gather}
-    \begin{aligned}
-        \dot x &= f(x,u) & \quad & \pder{H}{u}(x,u,\lambda) = 0 \\
-        \dot\lambda &= -\pder{H\trans}{x}(x,u,\lambda) && u = F(x,\lambda) \\
-    \end{aligned} \\
-    \Longrightarrow \begin{dcases}
-        \dot x = f(x,F(x,\lambda)) \\
-        \dot \lambda = -\pder{H\trans}{x}(x,F(x,\lambda),\lambda)
-    \end{dcases}
+  \begin{aligned}
+    \dot x &= f(x,u) & \quad & \pder{H}{u}(x,u,\lambda) = 0 \\
+    \dot\lambda &= -\pder{H\trans}{x}(x,u,\lambda) && u = F(x,\lambda) \\
+  \end{aligned} \\
+  \Longrightarrow \begin{dcases}
+    \dot x = f(x,F(x,\lambda)) \\
+    \dot \lambda = -\pder{H\trans}{x}(x,F(x,\lambda),\lambda)
+  \end{dcases}
 \end{gather}
 The equations are functions of $x$ and $\lambda$. They are completely determined by the boundary conditions on $x(0)$, $x(T)$, $\lambda(0)$, $\lambda(T)$. This is known as the \emph{Boundary Value Problem}. This is solved using \emph{test shooting}:
 \begin{enumerate}
@@ -1890,38 +1892,38 @@ The equations are functions of $x$ and $\lambda$. They are completely determined
 
 \paragraph{Exmaple:} Bolza problem
 \begin{align}
-    & \min_{u\in\mathcal U} \int_0^T L(x,u)\dif t + \Psi(x(T)) \\
-    & \text{s.t. } \begin{cases}
+  & \min_{u\in\mathcal U} \int_0^T L(x,u)\dif t + \Psi(x(T)) \\
+  & \text{s.t. } \begin{cases}
     \dot x=f(x,u) \\
     x(0) = x_0
-\end{cases} \\
-& H(x,u,\lambda) = L(x,u) + \lambda\trans f(x,u) \\
-& u^* (x,\lambda) \text{ satisfies } \pder{H}{u} = 0
+  \end{cases} \\
+  & H(x,u,\lambda) = L(x,u) + \lambda\trans f(x,u) \\
+  & u^* (x,\lambda) \text{ satisfies } \pder{H}{u} = 0
 \end{align}
 The optimal control satisfies
 \begin{gather}
-    \begin{dcases}
-        x = f(x,u^*(x,\lambda)) \\
-        x(0) = x_0 \\
-        \lambda = -\pder{H\trans}{x} (x,u^*(x,\lambda),\lambda) \\
-        \lambda(T) = \pder{\Psi}{x}(x(T))
-    \end{dcases}
+  \begin{dcases}
+    x = f(x,u^*(x,\lambda)) \\
+    x(0) = x_0 \\
+    \lambda = -\pder{H\trans}{x} (x,u^*(x,\lambda),\lambda) \\
+    \lambda(T) = \pder{\Psi}{x}(x(T))
+  \end{dcases}
 \end{gather}
 
 \paragraph{Algorithm}
 Guess $\lambda_0$ and solve for $x(t)$, $\lambda(t)$.
 \begin{center}
-    \begin{tikzpicture}
-        \draw [thick,->] (-0.5,0) -- (5,0);
-        \draw [thick,->] (0,-0.5) -- (0,3);
-        \draw (0,1) node [anchor=east] {$x_0$} .. controls (1,1.5) and (3,0.5) .. (4.5,1.2) node [anchor=west] {$x(T)$};
-        \draw (0,2) node [anchor=east] {$\lambda_0$} .. controls (2,1.5) and (4,3) .. (4.5,2.5) node [anchor=west] {$\lambda(T)$};
-    \end{tikzpicture}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (5,0);
+    \draw [thick,->] (0,-0.5) -- (0,3);
+    \draw (0,1) node [anchor=east] {$x_0$} .. controls (1,1.5) and (3,0.5) .. (4.5,1.2) node [anchor=west] {$x(T)$};
+    \draw (0,2) node [anchor=east] {$\lambda_0$} .. controls (2,1.5) and (4,3) .. (4.5,2.5) node [anchor=west] {$\lambda(T)$};
+  \end{tikzpicture}
 \end{center}
 Let's define a cost:
 \[ \left\Vert \lambda(T) - \pder{\Psi\trans}{x}(x(T)) \right\Vert^2 = g(\lambda_0) \]
 Update $\lambda_0$ through
-\[ \lambda_0 \coloneqq \lambda_0 - \underbracket[0pt]{\gamma}_{\mathclap{\substack{\uparrow\\ \text{\normalsize any choice of step size works}}}} \pder{g\trans}{\lambda_0}(\lambda_0) \]
+\[ \lambda_0 \coloneqq \lambda_0 - \underset{\mathclap{\substack{\big\uparrow\\ \text{\normalsize any choice of step size works}}}}{\gamma} \pder{g\trans}{\lambda_0}(\lambda_0) \]
 Repeat
 
 \medskip
@@ -1931,7 +1933,7 @@ Problem: What is $\partial g/\partial\lambda_0$? We estimate $\partial g/\partia
 
 Let $e_i$ be the $i$th unit vector, $i=1,\dots,n$:
 \begin{gather}
-    e_1 = \begin{bmatrix}
+  e_1 = \begin{bmatrix}
     1 \\ 0 \\ \vdots \\ 0
   \end{bmatrix}\!,\ 
   e_2 = \begin{bmatrix}
@@ -1945,98 +1947,360 @@ Let $e_i$ be the $i$th unit vector, $i=1,\dots,n$:
 \end{gather}
 The $i$th component of $\partial g/\partial\lambda_0$ is given by the directional derivative
 \[
-    \pder{g}{\lambda_{0,i}} = \pder{g}{\lambda_0} \cdot e_i = \delta g(\lambda_0;e_i) = \lim_{\varepsilon\to0} \frac{g(\lambda_0+\varepsilon e_i) - g(\lambda_0)}{\varepsilon}
+  \pder{g}{\lambda_{0,i}} = \pder{g}{\lambda_0} \cdot e_i = \delta g(\lambda_0;e_i) = \lim_{\varepsilon\to0} \frac{g(\lambda_0+\varepsilon e_i) - g(\lambda_0)}{\varepsilon}
 \]
 So, if $x\in\R^n$ (and thus so is $\lambda_0$), we have to do this $n$ times (with a small $\varepsilon$) and get the full derivative $\partial g/\partial\lambda_0$.
 
 \paragraph{Algorithm} \mbox{}
 \begin{algorithm}
-    \begin{algorithmic}
-        \State Given $\lambda_0$, $g(\lambda_0)$
-        \For {$i=1$ to $n$}
-        \State Compute $g(\lambda_0+\varepsilon e_i)$
-        \State $dg_i = \dfrac{1}{\varepsilon} [g(\lambda_0+\varepsilon e_i) - g(\lambda_0)]$
-        \EndFor
-        \smallskip
-        \State $\displaystyle\pder{g}{\lambda_0} = [dg_1,\dots,dg_n]$
-    \end{algorithmic}
+  \begin{algorithmic}
+    \State Given $\lambda_0$, $g(\lambda_0)$
+    \For {$i=1$ to $n$}
+    \State Compute $g(\lambda_0+\varepsilon e_i)$
+    \State $dg_i = \dfrac{1}{\varepsilon} [g(\lambda_0+\varepsilon e_i) - g(\lambda_0)]$
+    \EndFor
+    \smallskip
+    \State $\displaystyle\pder{g}{\lambda_0} = [dg_1,\dots,dg_n]$
+  \end{algorithmic}
 \end{algorithm}
 
 \paragraph{Example} LQ
 \begin{align}
-    & \min_u \frac12 \int_0^1 (x\trans Qx + u\trans Ru) \dif t + \frac12 x\trans(1)Sx(1) \\
-    & \text{s.t. } \begin{dcases}
-        \dot x = Ax + Bu \\
-        x(0) = x_0
-    \end{dcases} \\
-    & \phantom{\text{s.t. }} Q,R,S \succ 0
+  & \min_u \frac12 \int_0^1 (x\trans Qx + u\trans Ru) \dif t + \frac12 x\trans(1)Sx(1) \\
+  & \text{s.t. } \begin{dcases}
+    \dot x = Ax + Bu \\
+    x(0) = x_0
+  \end{dcases} \\
+  & \phantom{\text{s.t. }} Q,R,S \succ 0
 \end{align}
 \begin{align}
-    H &= \frac12 x\trans Qx + \frac12 u\trans Ru + \lambda\trans(Ax+Bu) \\
-    \pder{H}{u} &= u\trans R + \lambda\trans B = 0 \\
-    u^* &= -R^{-1}B\trans \lambda \\
-    \dot\lambda &= -\pder{H\trans}{x} = -Qx - A\trans\lambda \\
-    \lambda(1) &= \pder{\Psi\trans}{x}(x(1)) = Sx(1)
+  H &= \frac12 x\trans Qx + \frac12 u\trans Ru + \lambda\trans(Ax+Bu) \\
+  \pder{H}{u} &= u\trans R + \lambda\trans B = 0 \\
+  u^* &= -R^{-1}B\trans \lambda \\
+  \dot\lambda &= -\pder{H\trans}{x} = -Qx - A\trans\lambda \\
+  \lambda(1) &= \pder{\Psi\trans}{x}(x(1)) = Sx(1)
 \end{align}
 So putting it all together,
 \begin{alignat}{2}
-    \dot x &= Ax - BR^{-1}B\trans\lambda \qquad & x(0) &= x_0 \\
-    \dot\lambda &= -Qx - A\trans\lambda & \lambda(1) &= Sx(1)
+  \dot x &= Ax - BR^{-1}B\trans\lambda \qquad & x(0) &= x_0 \\
+  \dot\lambda &= -Qx - A\trans\lambda & \lambda(1) &= Sx(1)
 \end{alignat}
 
 \paragraph{Example} Newton's nose shape problem (\hyperlink{newton_nose_shape}{revisited, see previous})
 
 \begin{align}
-    & \min_u \int_0^\ell \frac{ru^3}{1+u^2}\dif x + \frac12 r(\ell)^2 \\
-    & \text{s.t. } \frac{\dif r}{\dif x} = -u \qquad r(0) = a
+  & \min_u \int_0^\ell \frac{ru^3}{1+u^2}\dif x + \frac12 r(\ell)^2 \\
+  & \text{s.t. } \frac{\dif r}{\dif x} = -u \qquad r(0) = a
 \end{align}
 \begin{align}
-    H &= \frac{ru^3}{1+u^2} + \lambda(-u) \\
-    \pder{H}{u} &= \frac{ru^2(3+u^2)}{(1+u^2)^2} - \lambda = 0 \\
-    \shortintertext{We solve the above numerically to get $u^*(r,\lambda)$.}
-    \pder{\lambda}{x} &= -\pder{H}{r} = -\frac{u^3}{1+u^2} \\
-    \lambda(\ell) &= r(\ell)
+  H &= \frac{ru^3}{1+u^2} + \lambda(-u) \\
+  \pder{H}{u} &= \frac{ru^2(3+u^2)}{(1+u^2)^2} - \lambda = 0 \\
+  \shortintertext{We solve the above numerically to get $u^*(r,\lambda)$.}
+  \pder{\lambda}{x} &= -\pder{H}{r} = -\frac{u^3}{1+u^2} \\
+  \lambda(\ell) &= r(\ell)
 \end{align}
 So, we have
 \begin{alignat}{3}
-    \frac{\dif r}{\dif x} &= -u & r(0) &= a & u &= F(x,\lambda) \\
-    \frac{\dif\lambda}{\dif x} &= -\frac{u^3}{1+u^2} \qquad & \lambda(\ell) &= r(\ell) \qquad
+  \frac{\dif r}{\dif x} &= -u & r(0) &= a & u &= F(x,\lambda) \\
+  \frac{\dif\lambda}{\dif x} &= -\frac{u^3}{1+u^2} \qquad & \lambda(\ell) &= r(\ell) \qquad
 \end{alignat}
 
 \paragraph{Example} Fixed terminal constraints (\hyperlink{fixed_term_cons}{revisited, see previous})
 
 \begin{align}
-    & \min_\alpha -v_x(T) \qquad \alpha=\text{control} \\
-    & \text{s.t. } \begin{aligned}[t]
+  & \min_\alpha -v_x(T) \qquad \alpha=\text{control} \\
+  & \text{s.t. } \begin{aligned}[t]
     \dot x &= v_x & x(0) &= 0 \\
     \dot y &= v_y & y(0) &= 0 \\
     \dot v_x &= |f|\cos\alpha & v_x(0) &= 0 \\
     \dot v_y &= |f|\sin\alpha & v_y(0) &= 0 \\
     y(T) &= h \\
     v_y(T) &= 0
-    \end{aligned}
+  \end{aligned}
 \end{align}
 \begin{align}
-    H &= -v_x(T) + \begin{bmatrix}
-        \lambda_x & \lambda_y & \lambda_{v_x} & \lambda_{v_y}
-    \end{bmatrix}
-    \begin{bmatrix}
-        v_x \\ v_y \\ |f|\cos\alpha \\ |f|\sin\alpha
-    \end{bmatrix} \\
-    \frac{\dif H}{\dif\alpha} &= 0 \Rightarrow \tan\alpha = \frac{\lambda_{v_y}}{\lambda_{v_x}} \\
-    \dot\lambda_x &= 0 \\
-    \dot\lambda_y &= 0 \\
-    \dot\lambda_{v_x} &= -\lambda_x \\
-    \dot\lambda_{v_y} &= -\lambda_y \\
-    \bm\lambda(0) & \text{ unspecified} \\
-    \lambda_x(T) &= \pder{\Psi\trans}{x}(x(T)) = 0 \\
-    \lambda_y(T) & \text{ unspecified} \\
-    \lambda_{v_x}(T) &= \pder{\Psi\trans}{v_x}(v_x(T)) = -1 \\
-    \lambda_{v_y}(T) & \text{ unspecified}
+  H &= -v_x(T) + \begin{bmatrix}
+    \lambda_x & \lambda_y & \lambda_{v_x} & \lambda_{v_y}
+  \end{bmatrix}
+                                            \begin{bmatrix}
+                                              v_x \\ v_y \\ |f|\cos\alpha \\ |f|\sin\alpha
+                                            \end{bmatrix} \\
+  \frac{\dif H}{\dif\alpha} &= 0 \Rightarrow \tan\alpha = \frac{\lambda_{v_y}}{\lambda_{v_x}} \\
+  \dot\lambda_x &= 0 \\
+  \dot\lambda_y &= 0 \\
+  \dot\lambda_{v_x} &= -\lambda_x \\
+  \dot\lambda_{v_y} &= -\lambda_y \\
+  \bm\lambda(0) & \text{ unspecified} \\
+  \lambda_x(T) &= \pder{\Psi\trans}{x}(x(T)) = 0 \\
+  \lambda_y(T) & \text{ unspecified} \\
+  \lambda_{v_x}(T) &= \pder{\Psi\trans}{v_x}(v_x(T)) = -1 \\
+  \lambda_{v_y}(T) & \text{ unspecified}
 \end{align}
 Again, we guess $\lambda_0$ and solve forward in time. But, we have terminal constraints on $y$ and $v_y$ as well.
 \begin{gather}
-    q(\lambda_0) = \frac12 \Big[ (y(T)-h)^2 + (v_y(T))^2 + (\lambda_x(T))^2 + (\lambda_{v_x}+1)^2 \Big]
+  g(\lambda_0) = \frac12 \Big[ (y(T)-h)^2 + (v_y(T))^2 + (\lambda_x(T))^2 + (\lambda_{v_x}+1)^2 \Big]
 \end{gather}
+
+% 2017/02/28
+
+\section{Terminal Manifolds}
+
+We can solve
+\begin{align}
+  & \min_{u\in\mathcal U} \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  & \text{s.t. } \dot x = f(x,u,t)
+\end{align}
+with all sorts of boundary conditions on $x$:
+\begin{itemize}
+\item $x(0)=x_0$, $x(T)$ free (typical)
+\item $x_i(0)=x_{i0}$, $i\in\mathcal I$ and $x_j(T)=x_{jT}$, $j\in\mathcal T$
+\end{itemize}
+But what if we want $x(T)$ to belong to a set?
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw (0,0) coordinate (a) .. controls (1.5,0.5) and (2,-0.5) .. (4,-1) coordinate (b);
+    \node [dot] at (a) {};
+    \node [dot] at (b) {};
+    \node [below left] at (a) {$x_0$};
+    \node [right] at (b) {$x(T)$};
+    \draw (b) arc (-160:200:0.75cm and 1.25cm);
+    \node [right] at ($(b)+(1.5,0.5)$) {$\phi=0$};
+  \end{tikzpicture}
+\end{center}
+
+\paragraph{Problem}
+\begin{align}
+  & \min_{u\in\mathcal U} \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  & \text{s.t. } \begin{aligned}[t]
+    & \dot x = f(x,u,t), && x\in\R^n \\
+    & x(0) = x_0 \\
+    & \phi(x(T)) = 0, && \phi:\R^n\to\R^q,\ q\le n
+  \end{aligned}
+\end{align}
+The augmented cost is
+\[
+  \tilde J = \int_0^T [ H(x,u,t,\lambda) - \lambda\trans \dot x]\dif t + \Psi(x(T)) + \underset{\mathclap{\substack{\uparrow\\ \text{q-dimensional}\\ \text{Lagrange multiplier}}}}{\nu}\trans \phi(x(T))
+\]
+Let $\Phi(x(T),\nu)=\Psi(x(T)) + \nu\trans\phi(x(T))$. Then,
+\[
+  \tilde J = \int_0^T \left( \pder{H}{x} + \dot\lambda\trans \right) \eta \dif t + \Phi(x(T),\nu)
+\]
+We know how to solve this! With $u\mapsto u+\varepsilon v$, $x\mapsto x+\varepsilon\eta + o(\varepsilon)$,
+\begin{align}
+  \delta \tilde J &= \int_0^T \left(\pder{H}{x} + \dot\lambda\trans\right)\eta\dif t + \int_0^T \pder{H}{u}v \dif t + \pder{\Phi}{x}(x(T),\nu)\eta(T) \\
+                  & \qquad - \lambda\trans(T)\eta(T) + \lambda\trans(0)\underbracket{\eta(0)}_{=0} \\
+                  & \begin{dcases}
+                    \pder{H}{u} = 0 \\
+                    \dot\lambda = -\pder{H\trans}{x} \\
+                    \lambda(T) = \pder{\Phi\trans}{x}( x(T), \overset{\mathclap{\substack{q \text{ new variables}\\ \downarrow}}}{\nu} ) \\
+                    \phi(x(T)) = 0 \ \leftarrow q \text{ new equations}
+                  \end{dcases} \\
+                  & \Longrightarrow u^*
+\end{align}
+
+\paragraph{Spling to line}
+
+\begin{align}
+  & \min_u \frac12 \int_0^1 u^2(t) \dif t \\
+  & \text{s.t. } \adjustbox{valign=t}{$\begin{dcases}
+        \dot x_1 = x_2 \\
+        \dot x_2 = u \\
+        x_1(0) = 0,\ x_2(0) = 0 \\
+        c_1 x_1(1) + c_2 x_2(1) = d
+      \end{dcases}$}
+\end{align}
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-0.5,0) -- (4,0) node [right] {$x_1$};
+    \draw [thick,->] (0,-1) -- (0,3) node [above] {$x_2$};
+    \draw (-0.5,2.75) coordinate (a) -- (3.75,-0.75) coordinate (b) node [below] {$\substack{\displaystyle c\trans x=d\\ \text{(eq. for line)}}$};
+    \draw (0,0) coordinate (o) .. controls (0.75,1.5) and (1.5,-2) .. ($(b)!0.1!(a)$) coordinate (c);
+    \node [dot] at (o) {};
+    \node [dot] at (c) {};
+  \end{tikzpicture}
+\end{center}
+
+\begin{align}
+  H &= \frac12 u^2 + \lambda_1 x_2 + \lambda_2 u \\
+  \pder{H}{u} &= u + \lambda_2 \Longrightarrow u = -\lambda_2 \\
+  \dot\lambda_1 &= -\pder{H}{x_1} = 0 \Longrightarrow \lambda_1 = k_1 \\
+  \dot\lambda_2 &= -\pder{H}{x_2} = -\lambda_1 \Longrightarrow \lambda_2 = -k_1 t + k_2 \\
+  \phi(x(1)) &= c_1 x_1(1) + c_2 x_2(1) - d \\
+  \Psi &= 0 \Longrightarrow \Phi = \nu (c_1x_1(1) + c_2x_2(1) - d) \\
+  \lambda_1(1) &= \pder{\Phi}{x_1} = \nu c_1 \\
+  \lambda_2(1) &= \pder{\Phi}{x_2} = \nu c_2 \\
+  \shortintertext{So,}
+  \lambda_1(1) &= \nu c_1 = k_1 \\
+  \lambda_2(1) &= \nu c_2 = -k_1 + k_2 \\
+  k_2 &= \nu (c_1 + c_2) \\
+  \dot x_2 &= u = -\lambda_2 = k_1 t - k_2 \\
+  x_2 &= \frac{k_1}{2} t^2 - k_2 t + 0 \\
+  \dot x_1 &= x_2 \\
+  x_1 &= \frac{k_1}{6} t^3 - \frac{k_2}{2} t^2 + 0 \\
+  \shortintertext{Substituting $k_1$ and $k_2$ into $c_1x_1(1)+c_2x_2(1)=d$,}
+    & \nu \left( -\frac{c_1^2}{3} - c_1 c_2 - c_2^2 \right) = d \\
+  \nu &= - \frac{d}{c_1^2/3 + c_1c_2 + c_2^2} \\
+  \shortintertext{And finally}
+  \Aboxed{u &= k_1 t - k_2 = \frac{d}{c_1^2/3 + c_1c_2 + c_2^2} (c_1 + c_2 - c_1 t)}
+\end{align}
+As a final observation if $\Psi=0$ then
+\[
+  \lambda(T) = \nu\trans \pder{\phi}{x}(x(T)),
+\]
+which means $\lambda(T)$ is orthogonal to the tangent plane to $\phi(x(T))$.
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw (0,0) parabola [bend at end] (1,0.5);
+    \draw (1,0.5) parabola (3,-2);
+    \draw (3,-2) parabola [bend at end] (3.5,-2.5);
+    \draw (3.5,-2.5) -- ++(3,0) node [right] {$\phi=0$};
+    \draw [->] (5,-2.5) coordinate (a) -- ++(0,-1.25) coordinate (b);
+    \node [below] at (b) {$\lambda(T)$};
+    \draw ($(a)!8pt!(b)$) coordinate (c) -- ($(c)!1!-90:(a)$) coordinate (d);
+    \draw (d) -- ($(d)!1!-90:(c)$);
+    \draw [->] (2.25,-0.48) coordinate (e) -- ++ (33:1.25) coordinate (f);
+    \node [right] at (f) {$\lambda(T)$};
+    \draw ($(e)!8pt!(f)$) coordinate (g) -- ($(g)!1!90:(e)$) coordinate (h);
+    \draw (h) -- ($(h)!1!90:(g)$);
+  \end{tikzpicture}
+\end{center}
+
+\paragraph{Example} Maximum orbit transform (e.g.\ Hidden Figures)
+
+\bigskip
+
+\begin{tabular}{cc}
+  \begin{tikzpicture}[baseline=(c)]
+    \node [dot] at (0,0) {};
+    \node [below] at (0,0) {center};
+    \draw [->] (0,0) -- ++(3,0) coordinate (a);
+    \node [below] at (a) {$r(0)$};
+    \draw [->] (0,0) -- ++(110:4) coordinate (b);
+    \node [below left] at (b) {$r(T)$};
+    \draw (a) to [out=90,in=20] (b);
+    \draw [dashed] (a) arc (0:130:3);
+    % \draw [dashed] (b) arc (110:-10:4);
+    \path (b) arc (110:-10:4) coordinate (rT);
+    \draw [dashed] (b) arc (110:86:4);
+    \draw [dashed] (rT) arc (-10:80:4);
+
+    \draw [->] (0,0) -- ++(72:3.6) coordinate (c) node [pos=0.5,right] {$r(t)$};
+    \node [dot] at (c) {};
+    \draw [->] (c) -- ($(c)!-1cm!(0,0)$) coordinate (u);
+    \node [right] at (u) {$u$};
+    \draw [->] (c) -- ($(c)!1!90:(u)$) coordinate (v) node [below] {$v$};
+    \draw [->] (c) -- ($(c)!1.5!50:(u)$) coordinate (T) node [left] {$T$};
+    \path ($(c)!0.6cm!(v)$) coordinate (vv) ($(c)!0.6cm!(T)$) coordinate (TT);
+    \draw (vv) to [bend left] (TT);
+    \node [above,xshift=-2pt] at (vv) {$\phi$};
+  \end{tikzpicture}
+  &
+    \begin{tabular}[t]{>{$}r<{$} @{${}={}$} p{6cm}}
+      r & radial distance from spacecraft to center \\
+      u & radial velocity \\
+      v & tangential velocity \\
+      m & mass of spacecraft \\
+      \dot m & $-$fuel consumption rate \\
+      \phi & thrust angle (control input) \\
+      T & thrust
+    \end{tabular}
+\end{tabular}
+
+\begin{align}
+  & \max_\phi r(T) \Longleftrightarrow \min_\phi -r(T) \\
+  & \text{s.t. } \adjustbox{valign=t}{$\begin{dcases}
+        \dot r = u \\
+        \dot u = \frac{v^2}{r} - \frac{g}{r^2} + \frac{T\sin\phi}{m_0 - |\dot m|t} \\
+        \dot v = -\frac{uv}{r} + \frac{T\cos\phi}{m_0 - |\dot m|t} \\
+        r(0) = r_0 \\
+        u(0) = 0 \\
+        v(0) = \sqrt{\frac{g}{r_0}} \\
+        u(T) = 0 = \phi_1 \\
+        v(T) = \sqrt{\frac{g}{r(T)}} = \phi_2
+      \end{dcases}$}
+\end{align}
+
+\begin{align}
+  H &= \lambda_r u + \lambda_u \left( \frac{v^2}{r} - \frac{g}{r^2} + \frac{T\sin\phi}{m_0-|\dot m|t} \right) + \lambda_v \left(-\frac{uv}{r} + \frac{T\cos\phi}{m_0-|\dot m|t} \right) \\
+  \Phi &= \underbrace{\nu_1 u(T) + \nu_2 \left(v(T) - \sqrt{\frac{g}{r(T)}}\right)}_{\nu\trans\phi} \underbrace{- r(T)}_{\Psi} \\
+  \pder{H}{\phi} &= \frac{\lambda_u T\cos\phi - \lambda_v T\sin\phi}{m_0 - |\dot m|t} = 0 \\
+    & \Rightarrow \tan\phi = \frac{\lambda_u}{\lambda_v} \\
+  \dot\lambda_r &= -\pder{H}{r} = -\lambda_u \left(-\frac{v^2}{r^2} + \frac{2g}{r^3}\right) - \lambda_v\cdot\frac{uv}{r^2} \\
+  \dot\lambda_u &= -\pder{H}{u} = -\lambda_r + \lambda_v\cdot \frac{v}{r} \\
+  \dot\lambda_v &= -\pder{H}{v} = -\lambda_u\cdot \frac{2v}{r} + \lambda_v\cdot \frac{u}{r} \\
+    & \begin{dcases}
+      \lambda_r(T) = \pder{\Phi}{r} = -1 + \frac{\nu_2\sqrt{g}}{2(r(T))^{3/2}} \\
+      \lambda_u(T) = \pder{\Phi}{u} = \nu_1 \\
+      \lambda_v(T) = \pder{\Phi}{v} = \nu_2 \\
+      u(T) = 0 \\
+      v(T) = \sqrt{\frac{g}{r(T)}}
+    \end{dcases}
+\end{align}
+This needs numerics to solve.
+
+\subsection{Terminal manifold with inequality constraints}
+\begin{align}
+  & \min_u \int_0^T L\dif t + \Psi \\
+  & \dot x = f(x,u) \\
+  & \phi(x(T)) \le 0
+\end{align}
+
+\begin{center}
+  \begin{tikzpicture}
+    \node [dot] at (0,0) {};
+    \draw [-{Latex[scale=1.5]}] (-3,-1) to [bend left] (0,0);
+
+    \draw (0,0) circle (2);
+    \node [right] at (2,0) {$\phi=0$};
+    \node [right] at (2.5,1.2) {$\phi>0$};
+    \node [left] at (1.5,1.2) {$\phi<0$};
+
+    \path (2,0) arc (0:135:2) coordinate (a);
+    \draw [->] (a) -- ++(-45:1) coordinate (b);
+    \node [right] at (b) {$\lambda(T)$};
+    \draw ($(a)!8pt!(b)$) coordinate (c) -- ($(c)!1!-90:(a)$) coordinate (d);
+    \draw (d) -- ($(d)!1!-90:(c)$);
+  \end{tikzpicture}
+\end{center}
+
+Repeat process: $\tilde J = \int(H-\lambda\trans\dot x)\dif t + \Psi + \nu\trans\phi$. The optimality conditions are
+\[
+  \begin{dcases}
+    \pder{H}{u} = 0 \\
+    \dot\lambda = -\pder{H\trans}{x} \\
+    \lambda(T) = \pder{\Psi\trans}{x}(x(T)) + \nu\trans\pder{\phi\trans}{x}(x(T)) \\
+    \nu \ge 0 \\
+    \phi(x(T)) \le 0 \\
+    \nu\trans \phi(x(T)) = 0 \quad (\text{KKT})
+  \end{dcases}
+\]
+
+\subsection{Initial manifold}
+\begin{align}
+  & \min_{x_0,u} \int L + \Psi(x(T)) + \Theta(x(0)) \\
+  & \text{s.t. } \begin{aligned}[t]
+    & \dot x = f(x,u) \\
+    & \phi(x(T)) = 0 \\
+    & \xi(x(0)) = 0
+  \end{aligned}
+\end{align}
+
+\begin{align}
+  \tilde J &= \int (H-\lambda\trans\dot x)\dif t + \Psi(x(T)) + \Theta(x(0)) + \nu\trans_\phi \phi(x(T)) + \nu\trans_\xi \xi(x(0)) \\
+  \delta \tilde J &= \int \left[ \left( \pder{H}{x} + \dot\lambda\trans \right) \eta + \pder{H}{u}v\right] \dif t + \left[ \pder{\Psi}{x}(x(T)) + \nu\trans_\phi \pder{\phi}{x}(x(T)) - \lambda\trans(T) \right] \eta(T) \\
+           & \qquad + \left[ \pder{\Theta}{x}(x(0)) + \nu\trans_\xi \pder{\xi}{x}(x(0)) + \lambda\trans(0) \right] \eta(0)
+\end{align}
+The optimality conditions are
+\[
+  \begin{dcases}
+    \pder{H}{u} = 0 \\
+    \dot\lambda = -\pder{H\trans}{x} \\
+    \lambda(T) = -\pder{\Psi\trans}{x}(x(T)) - \nu\trans_\phi \pder{\phi\trans}{x}(x(T)) \\
+    \lambda(0) = -\pder{\Theta\trans}{x}(x(0)) - \nu\trans_\xi \pder{\xi\trans}{x}(x(0))
+  \end{dcases}
+\]
 
 \end{document}
