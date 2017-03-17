@@ -10,7 +10,7 @@
 \usepackage{enumitem}
 \usepackage{framed}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows.meta,positioning,patterns,calc,decorations.pathmorphing}
+\usetikzlibrary{shapes,arrows.meta,positioning,patterns,calc,decorations.pathmorphing,intersections}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.9}
 \usepackage{algpseudocode}
@@ -1817,10 +1817,10 @@ We have the Hamiltonian Dynamics:
     \dot x \\ \dot\lambda
   \end{bmatrix} =
   \underbrace{
-      \begin{bmatrix}
-        A & -BB\trans \\
-        0 & -A\trans
-      \end{bmatrix}
+    \begin{bmatrix}
+      A & -BB\trans \\
+      0 & -A\trans
+    \end{bmatrix}
   }_{M}
   \begin{bmatrix}
     x \\ \lambda
@@ -2104,11 +2104,11 @@ We know how to solve this! With $u\mapsto u+\varepsilon v$, $x\mapsto x+\varepsi
 \begin{align}
   & \min_u \frac12 \int_0^1 u^2(t) \dif t \\
   & \text{s.t. } \adjustbox{valign=t}{$\begin{dcases}
-        \dot x_1 = x_2 \\
-        \dot x_2 = u \\
-        x_1(0) = 0,\ x_2(0) = 0 \\
-        c_1 x_1(1) + c_2 x_2(1) = d
-      \end{dcases}$}
+      \dot x_1 = x_2 \\
+      \dot x_2 = u \\
+      x_1(0) = 0,\ x_2(0) = 0 \\
+      c_1 x_1(1) + c_2 x_2(1) = d
+    \end{dcases}$}
 \end{align}
 
 \begin{center}
@@ -2212,15 +2212,15 @@ which means $\lambda(T)$ is orthogonal to the tangent plane to $\phi(x(T))$.
 \begin{align}
   & \max_\phi r(T) \Longleftrightarrow \min_\phi -r(T) \\
   & \text{s.t. } \adjustbox{valign=t}{$\begin{dcases}
-        \dot r = u \\
-        \dot u = \frac{v^2}{r} - \frac{g}{r^2} + \frac{T\sin\phi}{m_0 - |\dot m|t} \\
-        \dot v = -\frac{uv}{r} + \frac{T\cos\phi}{m_0 - |\dot m|t} \\
-        r(0) = r_0 \\
-        u(0) = 0 \\
-        v(0) = \sqrt{\frac{g}{r_0}} \\
-        u(T) = 0 = \phi_1 \\
-        v(T) = \sqrt{\frac{g}{r(T)}} = \phi_2
-      \end{dcases}$}
+      \dot r = u \\
+      \dot u = \frac{v^2}{r} - \frac{g}{r^2} + \frac{T\sin\phi}{m_0 - |\dot m|t} \\
+      \dot v = -\frac{uv}{r} + \frac{T\cos\phi}{m_0 - |\dot m|t} \\
+      r(0) = r_0 \\
+      u(0) = 0 \\
+      v(0) = \sqrt{\frac{g}{r_0}} \\
+      u(T) = 0 = \phi_1 \\
+      v(T) = \sqrt{\frac{g}{r(T)}} = \phi_2
+    \end{dcases}$}
 \end{align}
 
 \begin{align}
@@ -2302,5 +2302,162 @@ The optimality conditions are
     \lambda(0) = -\pder{\Theta\trans}{x}(x(0)) - \nu\trans_\xi \pder{\xi\trans}{x}(x(0))
   \end{dcases}
 \]
+
+% 2017/03/02
+
+\subsection{Unspecified Terminal Times}
+
+For example, instead of driving to the moon using minimum fuel, we want to get there as soon as possible:
+\[
+  \min_{u,T} \int_0^T L(x,u,t)\dif t + \Psi(x(T),T).
+\]
+The variations are $u\mapsto u+\varepsilon v$ and $T\mapsto T+\varepsilon\tau$
+
+\begin{center}
+  \begin{tikzpicture}
+    \clip (-1,-0.5) rectangle (5,3.5);
+    \draw [thick,->,name path=x-axis] (0,0) -- (4,0) node [right] {$t$};
+    \draw [thick,->] (0,0) -- (0,3) node [left] {$u$};
+    \draw [domain=0:3,samples=100] plot(\x,{sin(500*\x + 10)/4 + 1}) coordinate (a) node [above] {$u$};
+    \draw [domain=0:3.5,samples=100] plot(\x,{sin(500*\x + 150)/4 + 2.2}) coordinate (b) node [above] {$u+\varepsilon v$};
+    \path [name path=u] (a) -- ++(0,-2);
+    \path [name path=u2] (b) -- ++(0,-3);
+    \draw [dashed,name intersections={of=x-axis and u}] (a) -- (intersection-1) node [below] {$T$};
+    \draw [dashed,name intersections={of=x-axis and u2}] (b) -- (intersection-1) node [below right,xshift=-8pt] {$T+\varepsilon\tau$};
+  \end{tikzpicture}
+  \hspace{1cm}
+  \begin{tikzpicture}
+    \clip (-1,-0.5) rectangle (5,3.5);
+    \draw [thick,->,name path=x-axis] (0,0) -- (4,0) node [right] {$t$};
+    \draw [thick,->] (0,0) -- (0,3) node [left] {$x$};
+    \node [dot] (x0) at (0,1.5) {};
+    \node [left] at (x0) {$x_0$};
+    \draw (x0) to [out=30,in=130] ++(1.3,0) .. controls ++(0.3,-0.5) and (2.3,2) .. (2.6,1.5) to [out=-40,in=200] (3,1.5) coordinate (a) node [above] {$x$};
+    \draw (x0) to [out=45,in=160] ++(0.8,0.5) to [out=-20,in=200] ++(0.5,0.25) to [out=20,in=190] ++(1,-0.2) .. controls ++(0.4,0.3) and ++(-0.5,-0.75) .. (3.5,2.5) coordinate (b) node [above] {$x+\varepsilon\eta+o(\varepsilon)$};
+    \path [name path=x] (a) -- ++(0,-2);
+    \path [name path=x2] (b) -- ++(0,-3);
+    \draw [dashed,name intersections={of=x-axis and x}] (a) -- (intersection-1) node [below] {$T$};
+    \draw [dashed,name intersections={of=x-axis and x2}] (b) -- (intersection-1) node [below right,xshift=-8pt] {$T+\varepsilon\tau$};
+  \end{tikzpicture}
+\end{center}
+
+\begin{align}
+  \tilde J(u,T) &= \int_0^T [ L(x,u,t) + \lambda\trans(f(x)-\dot x)]\dif t + \Psi(x(T),T) \\
+                &= \int_0^T [H - \lambda\trans\dot x]\dif t + \Psi \\
+  \tilde J(u+\varepsilon v,T+\varepsilon\tau) &= \int_0^T [H(x+\varepsilon\eta,u+\varepsilon v,t,\lambda) - \lambda\trans(\dot x+\varepsilon\dot\eta)]\dif t \\
+                & \qquad + \int_T^{T+\varepsilon\tau} [H(x+\varepsilon\eta,u+\varepsilon v,t,\lambda) - \lambda\trans(\dot x+\varepsilon\dot\eta)]\dif t \\
+                & \qquad + \Psi(x(T+\varepsilon\tau)+\varepsilon\eta(T+\varepsilon\tau),T+\varepsilon\tau) \displaybreak \\
+  \tilde J(u+\varepsilon v,T+\varepsilon\tau) - \tilde J(u,T) &= \varepsilon \int_0^T \left(\pder{H}{x} + \dot\lambda\trans\right)\eta\dif t + \varepsilon \int_0^T \pder{H}{u}v\dif t \label{eq:unspec_term_time} \\
+                & \qquad - \varepsilon\lambda\trans(T)\eta(T) + \varepsilon\lambda\trans(0)\eta(0) + o(\varepsilon) \\
+                & \qquad + \underbrace{\int_T^{T+\varepsilon\tau} [H(x+\varepsilon\eta,u+\varepsilon v,t,\lambda) - \lambda\trans(\dot x + \varepsilon\dot\eta)]\dif t}_{\displaystyle\text{(I)}} \\
+                & \qquad + \underbrace{\Psi(x(T+\varepsilon\tau)+\varepsilon\eta(T+\varepsilon\tau),T+\varepsilon\tau) - \Psi(x(T),T)}_{\displaystyle\text{(II)}}
+\end{align}
+For term I, use the mean value theorem to get rid of terms inside the integral that have a $\varepsilon$ before them:
+\begin{align}
+  \MoveEqLeft \int_T^{T+\varepsilon\tau} [L + \lambda\trans(f-\dot x-\varepsilon\dot\eta)]\dif t \\
+&= \int_T^{T+\varepsilon\tau} \left[ L(x,u,t) + \varepsilon\pder{L}{x}\eta + \varepsilon\pder{L}{u}v + \lambda\trans \left( f + \varepsilon\pder{f}{x}\eta + \varepsilon\pder{f}{u}v - \dot x - \varepsilon\dot\eta \right) \right]\dif t + o(\varepsilon) \\
+&= \varepsilon\tau \big[ L + \lambda\trans(f-\dot x) \big] \big|_{t=\xi} + o(\varepsilon) = \varepsilon\tau L \big|_{t=\xi} + o(\varepsilon) \\
+&= \varepsilon\tau L(x(\xi),u(\xi),\xi) + o(\varepsilon), \quad \xi\in[T,T+\varepsilon\xi] \label{eq:unspec_term_time_I}
+\end{align}
+Note that as $\varepsilon\to0$, $\xi\to T$.
+
+For term II, we further split it into two parts:
+\begin{gather}
+  \Psi(x+\varepsilon\eta,T+\varepsilon\tau) - \Psi(x,T) = \underbrace{\Psi(x,T+\varepsilon\tau)}_{\displaystyle\text{(II.a)}} + \underbrace{\varepsilon\pder{\Psi}{x}(x,T+\varepsilon\tau)\eta(T+\varepsilon\tau)}_{\displaystyle\text{(II.b)}} - \Psi(x,T)
+\end{gather}
+\begin{align}
+  \text{(II.a)}\Longrightarrow \Psi(x,T+\varepsilon\tau) &= \Psi(x(T),T+\varepsilon\tau) + \varepsilon\pder{\Psi}{x}(x(T),T+\varepsilon\tau)\dot x(T)\tau + o(\varepsilon) \\
+                                                         &= \Psi(x(T),T) + \varepsilon\pder{\Psi}{x}(x(T),T)\dot x(T)\tau + \varepsilon\pder{\Psi}{T}(x(T),T)\tau + o(\varepsilon) \\
+  \text{(II.b)}\Longrightarrow \varepsilon\pder{\Psi}{x}(x,T+\varepsilon\tau) & \eta(T+\varepsilon\tau) \\
+                                                         & = \varepsilon \left[ \pder{\Psi}{x}(x(T),T) + \varepsilon\pder{^2\Psi}{x^2}\dot x\tau + \varepsilon\pder{^2\Psi}{T\partial x}\tau + o(\varepsilon) \right] \\
+                                                         & \qquad \times \Big[\eta(T) + \varepsilon\dot\eta(T)\tau + o(\varepsilon)\Big] \\
+                                                         &= \varepsilon\pder{\Psi}{x}(x(T),T)\eta(T) + o(\varepsilon) \\
+  \text{(II)} \Longrightarrow  \Psi(x+\varepsilon\eta,T+\varepsilon\tau) & - \Psi(x,T) \\
+                                                         &= \varepsilon\pder{\Psi}{x}(x(T),T)[\dot x(T)\tau + \eta(T)] + \varepsilon\pder{\Psi}{T}(x(T),T)\tau + o(\varepsilon) \label{eq:unspec_term_time_II}
+\end{align}
+Substituting \eqref{eq:unspec_term_time_I} and \eqref{eq:unspec_term_time_II} into \eqref{eq:unspec_term_time} and taking the directional derivative,
+\begin{align}
+  \delta\tilde J &= \int_0^T \left(\pder{H}{x}+\dot\lambda\trans\right)\eta\dif t + \int_0^T\pder{H}{u}v\dif t + \lambda\trans(0)\eta(0) \\
+                 & \qquad + \left. \left[L + \pder{\Psi}{T} + \pder{\Psi}{x} f\right] \tau \right|_{t=T} + \left. \left(\pder{\Psi}{x} - \lambda\trans\right)\eta \right|_{t=T}
+\end{align}
+So we have a mix of old and new:
+\begin{align}
+  \text{old: } & \pder{H}{u} = 0 \\
+               & \dot\lambda = -\pder{H\trans}{x} \\
+               & \lambda(T) = \left. \pder{\Psi}{x} \right|_T \\
+  \text{new: } & \left. L + \pder{\Psi}{T} + \lambda\trans f \right|_T = 0
+\end{align}
+This last condition is known as the \emph{Transversality condition}.
+
+\paragraph{Example} Pure minimum time question
+\begin{gather}
+  \begin{aligned}
+    \min_{u,T} {} & \int_0^T \dif t \\
+    & \dot x = f(x,u) \\
+    & x(0) = x_0 \\
+    & x(T) = x_T
+  \end{aligned} \\
+  H = L + \lambda\trans f = 1 + \lambda\trans f \\
+  \shortintertext{The transversality condition is}
+  \left. L + \pder{\Psi}{T} + \lambda\trans f \right|_T = 0 \\
+  \left. \lambda\trans f \right|_T = -1 \\
+  H(T) = \left. 1 + \lambda\trans f \right|_T = 1 - 1 = 0 \\
+  \shortintertext{But this is a conservative system, so $H$ is a constant. Therefore,}
+  H(t) = 0 \quad \forall t\in[0,T]
+\end{gather}
+
+\clearpage
+\paragraph{Example} Zermelo's problem: sail from A to B as quickly as possible in the presence of known winds and currents.
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [->] (-3,0) -- ++(0.6,0) node [right] {x};
+    \draw [->] (-3,0) -- ++(0,0.6) node [above] {y};
+
+    \draw (-0.3,0) -- ++(0.6,0) arc (0:-180:0.3);
+    \draw (0,-0.15) coordinate (a) -- ++(0,0.7) -- ++(0.3,-0.3) -- ++(-0.6,0) -- ++(0.3,0.3);
+    \draw (a) -- ++(1,0) coordinate(b);
+    \draw (a) -- ++(1,0.5) coordinate (c);
+    \draw [-{Latex[scale=1.2]}] (a) -- ($(a)!0.8!(c)$) node [above,yshift=10pt] {$v={}$known};
+    \coordinate (d) at ($(a)!0.6!(b)$);
+    \draw let \p1 = ($(d)-(a)$) in (d) arc (0:30:\x1);
+    \node [above right] at (b) {$\phi={}$steering angle (input)};
+
+    \node [dot] (A) at (-2,-1.5) {};
+    \node [left] at (A) {A};
+    \node [dot] (B) at (2,-2) {};
+    \node [right] at (B) {B};
+    \draw (A) .. controls ++(1,0.5) and ++(-1,-1) .. ++(2,-0.5) .. controls ++(0.5,0.5) and ++(-0.5,-0.5) .. (B);
+    \draw [double equal sign distance,-Implies] (-1,-3.5) -- ++(45:1) node [below right] {wind, current};
+  \end{tikzpicture}
+\end{center}
+The dynamics are
+\begin{gather}
+  \begin{aligned}
+    \dot x &= v\cos\phi + c_1(x,y) \\
+    \dot y &= v\sin\phi + c_2(x,y)
+  \end{aligned}
+  \qquad
+  \lambda = \begin{bmatrix}
+    \lambda_x \\ \lambda_y
+  \end{bmatrix} 
+\end{gather}
+For minimum time, $L=1$.
+\begin{align}
+  H &= 1 + \lambda_x(v\cos\phi + c_1) + \lambda_y(v\sin\phi + c_2) \\
+  0 &= \pder{H}{\phi} = -v \lambda_x \sin\phi + v \lambda_y \cos\phi \\
+  \phi &= \tan^{-1} \left(\frac{\lambda_y}{\lambda_x}\right)
+\end{align}
+Since this is a conservative system, $H(t)=H(T)=0$, because $\partial\Psi/\partial T=0$.
+\begin{align}
+  -1 &= \lambda_x(v\cos\phi + c_1) + \lambda_y(v\sin\phi + c_2) \\
+  \lambda_x &= - \frac{\cos\phi}{v + c_1\cos\phi + c_2\sin\phi} \\
+  \lambda_y &= - \frac{\sin\phi}{v + c_1\cos\phi + c_2\sin\phi} \\
+  \dot\lambda &= -\pder{H\trans}{x} \\
+  \dot\lambda_x &= -\lambda_x\pder{c_1}{x} - \lambda_y\pder{c_2}{x} \\
+  \dot\lambda_y &= -\lambda_x\pder{c_1}{y} - \lambda_y\pder{c_2}{y} \\
+  \dot\phi &= \sin^2\phi \pder{c_2}{x} + \sin\phi \cos\phi \left(\pder{c_1}{x} - \pder{c_2}{y}\right) - \cos^2\phi \pder{c_1}{y}
+\end{align}
+This is an ODE that completely determines $\phi$ if we just had $\phi_0$.
 
 \end{document}
