@@ -1,1151 +1,7 @@
-\nonstopmode
-
-\documentclass[letterpaper,12pt,titlepage]{report}
-\usepackage{amsthm,amssymb}
-\usepackage{mathtools}
-\mathtoolsset{showonlyrefs}
-\usepackage{bm}
-\usepackage[margin=1in]{geometry}
-\usepackage{booktabs}
-\usepackage{enumitem}
-\usepackage{framed}
-\usepackage{tikz}
-\usetikzlibrary{shapes,arrows.meta,positioning,patterns,calc,decorations.pathmorphing,intersections}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.9}
-\usepackage{algpseudocode}
-\usepackage{algorithm}
-\usepackage{adjustbox}
-\usepackage{array}
-
-\usepackage[pdfpagelabels]{hyperref}
-
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhead{}
-\fancyfoot{}
-\fancyfoot[L]{K.\ Okkelberg}
-\fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0.5pt}
-
-\newcommand*\dif{\mathop{}\!\mathrm{d}}
-\newcommand{\trans}{^\text{T}}
-\newcommand{\herm}{^\text{H}}
-\DeclareMathOperator{\E}{E}
-\DeclareMathOperator{\trace}{trace}
-\DeclareMathOperator{\sign}{sign}
-\let\Pr\relax
-\DeclareMathOperator{\Pr}{P}
-\newcommand*\pder[2]{\frac{\partial #1}{\partial #2}}
-\newcommand*\R{\mathbb{R}}
-\newcommand*\U{\mathcal{U}}
-
-\theoremstyle{plain}
-\newtheorem*{thm}{Theorem}
-\theoremstyle{definition}
-\newtheorem*{defi}{Definition}
-
-\tikzstyle{line} = [draw, thick, >=latex]
-\tikzstyle{dot} = [circle,fill=black,inner sep=0pt,minimum size=4pt]
-\tikzset{>=latex}
-
-\begin{document}
-
-\hypersetup{pageanchor=false}
-\title{ECE 6553: Optimal Control Notes}
-\author{Klaus Z.\ Okkelberg}
-\date{Spring 2017}
-\maketitle
-
-\hypersetup{pageanchor=true}
-
-\tableofcontents
-
-\chapter{Parameter Optimization}
-
-% 2017/01/10
-\section{What is optimal control?}
-\paragraph{Optimal} Maximize/minimize cost (subject to constraints): $ \min_u g(u) $
-
-With constraints,
-\begin{align}
-  \min_u {}\ & g(u) \\
-  \text{s.t. } & \begin{cases} h_1(u) = 0 \\ h_2(u) \le 0 \end{cases}
-\end{align}
-
-First-order necessary condition (FONC):
-\[ \frac{\partial g}{\partial u}(u^*) = 0 \]
-
-Optimality can be
-\begin{itemize}
-\item local vs global
-\item max vs min
-\end{itemize}
-
-\begin{center}
-  \begin{tikzpicture}
-    \draw [thick,->] (0,0) -- (0,4) node [anchor=east] {$g$};
-    \draw [thick,->] (0,0) -- (6.5,0) node [anchor=north west] {$u$};
-    \draw plot [smooth, tension=1] coordinates { (0.5,3) (2,0.5) (3.5,3) (4.25,1) (5,2) (5.5,1.5) (6,2) };
-    \draw [thick] (2,0.1) -- (2,-0.1) node [anchor=north] {$u^*$};
-  \end{tikzpicture}
-\end{center}
-
-\paragraph{Control} control design: pick $u$ such that specifications are satisfied:
-\[ \dot{x} = f(x,u), \qquad \dot{x} = Ax + Bu, \]
-where $x(t)\in\mathbb{R}^n$ is the state, $u(t)\in\mathbb{R}^m$ is the control, and $f(\cdot)$ is the dynamics.
-
-Actually, $x$ and $u$ are signals:
-\[ x:[0,T]\to\R^n, \qquad  u:[0,T]\to\R^m \]
-
-\paragraph{Optimal control} find the ``best'' u!
-
-For ``best'' to mean anything, we need a cost. The big/deep question is
-\[ \frac{\partial \text{``cost''}}{\partial u} = 0 \]
-
-\paragraph{Example} \mbox{}
-
-Suppose we have a car with position $p$. Its acceleration $\ddot{p}$ is controlled by the gas/brake input $u$ ($\ddot{p}=u$). In order to express the dynamics of the system in the form $\dot{x}=f(x,u)$, we introduce state variables:
-\[
-  \begin{aligned} x_1 &= p \\ x_2 &= \dot{p} \end{aligned}
-  \ \Longrightarrow \
-  \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases}
-\]
-The task is to move the car from its initial position to a stop at a distance $c$ away.
-
-\subparagraph{Minimum energy problem}
-\begin{align}
-  \min_u {}\ & \int_0^T\! u^2(t) \dif t \\
-  \text{s.t. } & \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases} \\
-             & x_1(0) = 0,\, x_2(0) = 0 \\
-             & x_1(T) = c,\, x_2(T) = 0
-\end{align}
-
-\subparagraph{Minimum time problem}
-\begin{align}
-  \min_{u,T} {}\ & T = \int_0^T\! \dif t \\
-  \text{s.t. } & \begin{cases} \dot{x}_1 = x_2 \\ \dot{x}_2 = u \end{cases} \\
-                 & x_1(0) = 0,\, x_2(0) = 0 \\
-                 & x_1(T) = c,\, x_2(T) = 0 \\
-                 & u(t) \in [u_\text{min},u_\text{max}]
-\end{align}
-
-The general optimal control problem we will solve will look like
-\begin{align}
-  \min_{u,T} {}\ & \int_0^T\! L(x(t),u(t),t) \dif t + \Psi(x(T)) \\
-  \text{s.t. } & \dot{x}(t) = f(x(t),u(t),t),\ t\in[0,T] \\
-                 & x(0) = x_0 \\
-                 & x(T) \in S \\
-                 & u(t) \in \Omega,\ t\in[0,T]
-\end{align}
-where $\Psi(\cdot)$ is the terminal cost and $S$ is the terminal manifold. This is a so-called \textbf{Bolza Problem}.
-
-\paragraph{What tools do we need to solve this?}
-\begin{enumerate}
-\item optimality conditions $\partial\text{cost}/\partial u=0$
-\item some way of representing the optimal signal $u^*(x,t)$
-\item some way of actually finding/computing the optimal controllers
-\end{enumerate}
-
-% 2017/01/12
-\section{Unconstrained Optimization}
-
-Let the decision variable be $u=[u_1, \dots, u_m]\trans\in\mathbb R^m$. The cost is $g(u)\in C^1$ ($C^k$ means $k$ times continuously differentiable). The problem is
-\[ \min_u g(u), \quad g:\mathbb R^m \to \mathbb R \]
-For $u^*$ to be a minimizer, we need
-\[ \pder{g}{u} (u^*) = 0 \]
-\begin{defi}
-  $u^*$ is a (local) minimizer to $g$ if $\exists\delta>0$ s.t.
-  \begin{gather}
-    g(u^*) \le g(u) \quad \forall u\in B_\delta(u^*) \\
-    B_\delta(u^*) = \{ u \mid \Vert u-u^* \Vert \le \delta \}
-  \end{gather}
-\end{defi}
-
-\paragraph{Note:} \mbox{}
-\begin{itemize}
-\item $\displaystyle \pder{g}{u}(u^*) \delta u \in \mathbb R$ and $\delta u$ is $m\times 1$, so $\displaystyle \pder{g}{u}$ is a $1\times m$ row vector. For the column vector,
-  \[ \nabla g = \pder{g\trans}{u} \in \mathbb R^m \]
-\item $\displaystyle \pder{g}{u} \, \delta u$ is an inner product
-  \[ \langle \nabla g, \delta u \rangle = \left\langle \pder{g\trans}{u}, \delta u \right\rangle \]
-\item $o(\varepsilon)$ encodes higher-order terms
-  \[ \lim_{\varepsilon\to 0} \frac{o(\varepsilon)}{\varepsilon} = 0 \qquad \text{``faster than linear''} \]
-  This is opposed to big-O notation:
-  \[ \lim_{\varepsilon\to 0} \frac{\mathcal O(\varepsilon)}{\varepsilon} = c \]
-\item $\delta u$ has direction and scale so we could write it as
-  \[ \delta u = \varepsilon v, \quad \varepsilon\in\mathbb R,\ v\in\mathbb R^m \]
-\end{itemize}
-
-\begin{thm}
-  For $u^*$ to be a minimizer, we need
-  \[ \pder{g}{u} (u^*) = 0 \]
-  or, equivalently,
-  \[ \pder{g}{u} (u^*) v = 0 \quad \forall v\in\mathbb R^m \]
-\end{thm}
-
-\begin{proof}
-  Let $u^*$ be a minimizer. Evaluating the cost $g(u)$ in the ball and using Taylor's expansion,
-  \[ g(u^* + \delta u) = g(u^*) + \pder{g}{u} (u^*) \delta u + o(\Vert\delta u\Vert) = g(u^*) + \varepsilon \pder{g}{u} (u^*) v + o(\varepsilon) \]
-  Assume that $\pder{g}{u} \neq 0$. Then we could pick $v=-\pder{g\trans}{u}(u^*)$, i.e.
-  \[ g(u^*+\varepsilon v) = g(u^*) - \varepsilon \left\Vert \pder{g\trans}{u} (u^*) \right\Vert^2 + o(\varepsilon) \]
-  Note that the second term is negative per our assumptions. So, for $\varepsilon$ sufficiently small, we have
-  \[ g \Big( u^* - \varepsilon\pder{g\trans}{u} (u^*) \Big) < g(u^*) \]
-  This contradicts $u^*$ being a minimizer. \quad
-  \begin{tikzpicture}[scale=0.3]
-    \draw (0,0) -- (1,1);
-    \draw (0,1) -- (1,0);
-    \draw (0,0.35) -- (0.35,0);
-    \draw (0.65,0) -- (1,0.35);
-  \end{tikzpicture}
-  (crossed swords)
-\end{proof}
-
-\begin{defi}[Positive definite]
-  $M=M\trans \succ 0$ if
-  \begin{gather}
-    z\trans M z > 0 \quad \forall z\neq 0,\ z\in\mathbb R^m \\
-    \Longleftrightarrow M \text{ has real and positive eigenvalues}
-  \end{gather}
-\end{defi}
-
-\begin{thm}
-  If $g\in C^2$, then a \textbf{sufficient} condition for $u^*$ to be a (local) minimizer is
-  \begin{enumerate}
-  \item $\displaystyle \pder{g}{u}(u^*) = 0$
-  \item $\displaystyle \pder{^2 g}{u^2}(u^*) \succ 0$ (the Hessian is positive definite)
-  \end{enumerate}
-\end{thm}
-
-\begin{defi}
-  $g:\mathbb R^m\to\mathbb R$ is convex if
-  \[ g(\alpha u_1 + (1-\alpha)u_2) \le \alpha g(u_1) + (1-\alpha)g(u_2) \quad \forall \alpha\in[0,1], \ u_1,\! u_2\in\mathbb R^m \]
-  \begin{center}
-    \begin{tikzpicture}
-      \path [line,->] (-0.5,0) -- (4.5,0) node [anchor=west] {$u$};
-      \path [line,->] (0,-0.5) -- (0,3) node [anchor=east] {$g(u)$};
-      \draw (0.7,2.5) parabola bend (2.25,0.5) (3.8,2.5);
-      \path [line] (1.3,-0.2) node [anchor=north] {$u_1$} -- (1.3,0.2);
-      \path [line] (3.5,-0.2) node [anchor=north] {$u_2$} -- (3.5,0.2);
-      \path [line] (2.25,-0.2) node [pin={[pin edge={black}] below:{$\alpha u_1 + (1-\alpha)u_2$}}] {} -- (2.25,0.2);
-      \draw (1.3,1.25) -- (3.5,1.8);
-      \fill (1.3,1.25) circle (0.07);
-      \fill (3.5,1.8) circle (0.07);
-      \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$g(\alpha u_1 + (1-\alpha)u_2)$}}] at (2.25,0.5) {$\bm *$};
-      \node [pin={[pin edge={black,<-},pin distance=1.5cm] right:{$\alpha g(u_1) + (1-\alpha)g(u_2)$}}] at (2.25,1.48) {$\bm *$};
-    \end{tikzpicture}
-  \end{center}
-\end{defi}
-
-\begin{thm}
-  If $\pder{^2 g}{u^2} (u) \succeq 0$ $\forall u\in\mathbb R^m$, then $g$ is convex. ($\Longleftrightarrow$ for $g\in C^2$)
-\end{thm}
-
-\paragraph{Example} $\displaystyle \min_u u\trans Q u - b\trans u$ where $Q=Q\trans\succ 0$ (positive definite matrix)
-\begin{align}
-  \pder{g}{u} &= \pder{}{u} (u\trans Qu - b\trans u) \\
-              &= u\trans Q\trans + u\trans Q - b\trans \\
-              &= 2u\trans Q - b\trans \\[-3ex]
-  \pder{^2 g}{u^2} &= 2Q
-              & \pder{^2 g}{u^2} = \begin{bmatrix}
-                \pder{^2 g}{u_1^2} & \cdots & \pder{^2 g}{u_1 \partial u_m} \\
-                \vdots & \ddots & \vdots \\
-                \pder{^2 g}{u_m \partial u_1} & \cdots & \pder{^2 g}{u_m^2}
-              \end{bmatrix}
-\end{align}
-From $\pder{g}{u} = 2u\trans Q-b\trans = 0$,
-\[ u = \frac12 Q^{-1} b \]
-To see whether this is a minimizer, consider the Hessian. Since $Q \succ 0$, it follows that $\pder{^2 g}{u^2} (u^*) \succ 0$ and $u^*=\frac12 Q^{-1} b$ is a (local) minimizer. Additionally, since $\pder{^2 g}{u^2} \succ 0$, $g$ is convex and $u^*$ is a global minimizer. In fact, since we have strict convexity ($\succ 0$ rather than $\succeq 0$), it is the unique global minimizer.
-
-In optimal control, \emph{local} is typically all we can ask for. In optimization, we can do better!
-
-But wait, just because we know $\pder{g}{u}=0$, it doesn't follow that we can actually find $u^*$\dots
-
-\section{Numerical Methods}
-Idea: $u_{k+1}=u_k+\text{step}_k$. What should $\text{step}_k$ be? For small $\text{step}_k=\gamma_k v_k$,
-\[ g(u_k \cdot \text{step}_k) = g(u_k) + \pder{g}{u}(u_k) \cdot \text{step}_k + o(\Vert \text{step}_k \Vert) = g(u_k) + \gamma_k \pder{g}{u}(u_k) v_k + o(\gamma_k) \]
-A perfectly reasonable choice of step direction is
-\[ v_k=-\pder{g\trans}{u}(u_k), \]
-known as the \emph{steepest descend} direction. This produces
-\[ g \Big( u_k - \gamma_k\pder{g}{u}(u_k) \Big) = g(u_k) - \gamma_k \left\Vert \pder{g}{u}(u_k) \right\Vert^2 + o(\gamma_k) \]
-
-\begin{framed}
-  \textbf{Steepest descent} \[ u_{k+1} = u_k - \gamma_k \pder{g\trans}{u} (u_k) \]
-\end{framed}
-
-\paragraph{Note:} \mbox{}
-\begin{itemize}
-\item What should $\gamma_k$ be?
-\item This method ``pretends'' that $g(u)$ is linear. If we pretend $g(u)$ is quadratic, we get
-  \[ u_{k+1} = u_k - \left( \pder{^2 g}{u^2} (u_k) \right)^{-1} \pder{g\trans}{u} (u_k), \]
-  i.e.\ Newton's Method
-\end{itemize}
-
-\paragraph{This course:} steepest descent
-
-\subparagraph{Step-size selection?} \mbox{}
-\begin{itemize}
-\item Choice 1: $\gamma_k=\gamma$ ``small'' $\forall k$; will get close to a minimizer if $u_0$ is close enough and $\gamma$ small enough
-
-  Problems: \vspace{-1ex}
-  \begin{itemize}
-  \item You may not converge! (but you'll get close)
-  \item You may go off to infinity (diverge)
-  \end{itemize}
-
-  \begin{center}
-    \begin{tikzpicture}
-      \path [line,->] (-0.5,0) -- (4.5,0) node [anchor=west] {$u$};
-      \path [line,->] (0,-2) -- (0,3) node [anchor=east] {$g(u)$};
-      \draw (0.7,2.5) parabola bend (2.25,0.5) (3.8,2.5);
-      \draw (0.5,-1.5) .. controls (2,1.5) and (2,-3) .. (4,-0.5);
-
-      \draw [<->,>=latex] (1.7,0.75) node [circle,fill=black,minimum size=3pt,inner sep=0pt] {} -- (2.8,0.75) node [circle,fill=black,minimum size=3pt,inner sep=0pt] {};
-
-      \draw [->,>=latex] (0.9,2) -- (3.5,1.8);
-      \draw [->,>=latex] (3.5,1.8) -- (1.1,1.6);
-      \draw [->,>=latex] (1.1,1.6) -- (3.3,1.4);
-      \draw [->,>=latex] (3.3,1.4) -- (1.38,1.2);
-      \draw [->,>=latex] (1.38,1.2) -- (3.03,1);
-
-      \draw [->,>=latex] (1.25,-0.48) node [circle,fill=black,inner sep=0pt,minimum size=4pt] {} -- (0.3,-1.1);
-    \end{tikzpicture}
-  \end{center}
-  
-\item Choice 2: Reduce $\gamma_k$ as a function of $k$; will get close to a minimizer if $u_0$ is close enough
-
-  Problem: slow
-
-  \begin{thm}
-    If $u_0$ is close enough to $u^*$ and $\gamma_k$ satisfies
-    \begin{itemize}
-    \item $\displaystyle \sum_{k=0}^\infty \gamma_k = \infty$
-    \item $\displaystyle \sum_{k=0}^\infty \gamma_k^2 < \infty$
-    \end{itemize}
-    e.g.\ $\gamma_k=c/k$, then $u_k\to u^*$ as $k\to\infty$.
-  \end{thm}
-  
-  % 2017/01/17
-\item Choice 3: \textbf{Armijo step-size:} Take as big a step as possible, but no larger
-
-  Pick $\alpha\in(0,1)$, $\beta\in(0,1)$. Let $i$ be the smallest non-negative integer such that
-  \begin{gather}
-    g\left( u_k - \beta^i \pder{g\trans}{u}(u_k) \right) - g(u_k) < -\alpha\beta^i \left\Vert \pder{g}{u}(u_k) \right\Vert^2 \\
-    u_{k+1} = u_k - \beta^i \pder{g\trans}{u}(u_k)
-  \end{gather}
-  This will get to a minimizer blazingly fast if $u_0$ is close enough.
-\end{itemize}
-
-\section{Constrained Optimization}
-
-Equality constraints:
-\begin{align}
-  \min_{u\in\mathcal R^m} {}\ & g(u) \\
-  \text{s.t. } & h(u)=\bm 0
-\end{align}
-Consider $u\in\mathbb R^2$, $h:\mathbb R^2\to\mathbb R$
-\begin{center}
-  \begin{tikzpicture}[>=latex]
-    \draw (0,0) .. controls (2,3) and (4,-2) .. (10,0) node [anchor=west] {$h=0$};
-    \draw [>=latex,->] (0,-3) -- (0,-2);
-    \draw [>=latex,->] (0,-3) -- (1,-3) node [anchor=north] {$u$};
-    \node [anchor=west] at (10,1) {$h>0$};
-    \node [anchor=west] at (10,-1) {$h<0$};
-
-    \path
-    coordinate (u) at (2.5,0.77)
-    coordinate  (A) at (2,2)
-    coordinate (B) at (3,-0.49)
-    coordinate (C) at ($(u)!1!-90:(A)$)
-    coordinate (D) at ($(A)!(C)!(B)$)
-    coordinate (rc) at (3,0.6);
-    \draw [->] (u) node [dot] {} -- (A) node [anchor=south] {$\nabla g$};
-    \draw [<-,dashed] (B) -- (u) node [anchor=north,inner sep=6pt,xshift=-3pt] {$u$};
-    \draw [dashed] (C) -- ($(C)!2!(D)$);
-    \draw [->] (u) -- (rc) node [anchor=south west] {reduced cost};
-    \node [circle,fill=black,inner sep=0pt,minimum size=4pt] at (rc) {};
-    \node at ($(u)-(0,2)$) {not optimal};
-
-    \draw [->]  (5,-0.18) node [dot] (u2) {} -- (5.5,-1.5) coordinate (A2);
-    \node [anchor=north] at (A2) {$\nabla g$};
-    \draw [dashed] (u2) node [anchor=south,xshift=3pt] {$u$} -- ($(A2)!1.5!(u2)$);
-    \draw [dashed] ($(u2)!0.6!90:(A2)$) -- ($(u2)!0.6!-90:(A2)$);
-    \draw [->] (u2) -- (4.5,-0) node [dot] {};
-    \node at ($(u2)-(0,2.5)$) {not optimal};
-
-    \node [dot] (u3) at (7,-0.48) {};
-    \node [anchor=south] at (u3) {$\nabla g=0$};
-    \node [anchor=north,yshift=-2pt] at (u3) {$u$};
-    \node at ($(u3)-(0,1)$) {optimal};
-
-    \draw [->] (8.5,-0.38) node [dot] (u4) {} -- (8.25,0.9) node [anchor=south] (A4) {$\nabla g$};
-    \draw [shorten <=-0.5pt] ($(u4)!8pt!(A4)$) coordinate (B4) -- ($(B4)!1!90:(u4)$) coordinate (C4);
-    \draw (C4) -- ($(C4)!1!90:(B4)$);
-    \node [anchor=north] at (u4) {$u$};
-    \node at ($(u4)-(-0.2,0.6)$) {no reduction};
-    \node at ($(u4)-(0,1.5)$) {optimal};
-  \end{tikzpicture}
-\end{center}
-So $u$ is (locally) optimal if $\nabla g \parallel$ (is parallel to) the normal vector to tangent plane to h.
-
-\medskip
-Fact: (HW\# 1)
-\[ \nabla h \perp Th \quad \text{(tangent plane to h)} \]
-\begin{center}
-  \begin{tikzpicture}
-    \coordinate (u) at (1,0.2);
-    \draw (0,0) parabola bend (u) (2,0) node [anchor=west] {$h$};
-    \draw [->,>=latex] (u) -- ($(u)+(0,1)$) node [anchor=west] {$\nabla h$};
-    \draw ($(u)+(0,8pt)$) coordinate (b) -- ($(b)!1!90:(u)$) coordinate (c);
-    \draw [shorten >=-0.5pt] (c) -- ($(c)!1!90:(b)$);
-  \end{tikzpicture}
-\end{center}
-We need $\nabla g \parallel \nabla h$ at $u^*$ for optimality, i.e.
-\[ \pder{g}{u}(u^*) = \alpha \pder{h}{u}(u^*), \quad \text{for some } \alpha\in\R \]
-or ($\lambda=-\alpha$),
-\[ \pder{g}{u}(u^*) + \lambda \pder{h}{u}(u^*) = 0 \]
-or
-\[ \pder{}{u} \big( g(u^*) + \lambda h(u^*) \big) = 0, \quad \text{for some } \lambda\in\R \]
-More generally,
-\begin{align}
-  \min_{u\in\mathcal R^m} {}\ & g(u) \\
-  \text{s.t. } & h(u)=\bm 0, \quad h:\R^m\to\R^k
-\end{align}
-Note that $h(u)=[h_1(u),\dots,h_k(u)]\trans$.
-
-We need $\pder{g}{u}(u^*)$ to be a linear combination of $\pder{h_i}{u}(u^*)$, $i=1,\dots,k$, for exactly the same reasons, i.e.
-\[ \pder{g}{u}(u^*) = \sum_{i=1}^k \alpha_i \pder{h_i}{u}(u^*) \]
-or ($\lambda=-[\alpha_1,\dots,\alpha_k]\trans$)
-\[ \pder{g}{u}(u^*) + \lambda\trans \pder{h}{u}(u^*) = 0 \]
-or
-\[ \pder{}{u} \big( g(u^*) + \lambda\trans h(u^*) \big) = 0, \quad \text{for some } \lambda\in\R^k \]
-
-\begin{thm}
-  If $u^*$ is a minimizer to 
-  \begin{align}
-    \min_{u\in\mathcal R^m} {}\ & g(u) \\
-    \text{s.t. } & h(u)=\bm 0, \quad h:\R^m\to\R^k
-  \end{align}
-  then $\exists\lambda\in\R^k$ s.t.
-  \[ \begin{cases}
-      \displaystyle \pder{L}{u}(u^*,\lambda) = 0 \\[2ex]
-      \displaystyle \pder{L}{\lambda}(u^*,\lambda) = 0
-    \end{cases} \]
-  where the Lagrangian $L$ is given by
-  \[ L(u,\lambda) = g(u) + \lambda\trans h(u) \]
-\end{thm}
-
-\paragraph{Note:}
-\begin{itemize}
-\item $\lambda$ are the Lagrange multipliers
-\item $\pder{L}{\lambda}=0$ is fancy speak for $h(u^*)=0$
-\end{itemize}
-
-\paragraph{Example}
-\begin{align}
-  \min_{u\in\R^m} {}\ & \frac12 \Vert u\Vert^2 \\
-  \text{s.t. } & Au=b
-\end{align}
-where $A$ is $k\times m$, $k\le m$. Assume $(AA\trans)^{-1}$ exists (constraints are linearly independent, none of the constraints are ``duplicates'', all the constraints are essential).
-\begin{align}
-  L &= \frac12 u\trans u + \lambda\trans (Au-b) \\
-  \pder{L}{u} &= u\trans + \lambda\trans A = 0 \\
-  u^* &= -A\trans \lambda \\
-  \shortintertext{Using the equality constraint,}
-  A u^* &= b \\
-  -A A\trans \lambda &= b \\
-  \lambda &= -(AA\trans)^{-1} b \\
-  u^* &= A\trans (AA\trans)^{-1} b
-\end{align}
-
-\paragraph{Example}
-\begin{align}
-  \min {}\ & u_1u_2 + u_2u_3 + u_1u_3 \\
-  \text{s.t. } & u_1 + u_2 + u_3 = 3
-\end{align}
-\[ L = u_1u_2 + u_2u_3 + u_1u_3 + \lambda (u_1 + u_2 + u_3 - 3) \]
-\begin{align}
-  \begin{cases}
-    \pder{L}{u_1} = u_2 + u_3 + \lambda = 0 \\
-    \pder{L}{u_2} = u_1 + u_3 + \lambda = 0 \\
-    \pder{L}{u_3} = u_2 + u_1 + \lambda = 0 \\
-    \pder{L}{\lambda} = u_1 + u_2 + u_3 = 3
-  \end{cases}
-  \Longrightarrow
-  \begin{cases}
-    u_1^* = 1 \\
-    u_2^* = 1 \\
-    u_3^* = 1 \\
-    \lambda = -2
-  \end{cases}
-  \quad \text{optimal solution}
-\end{align}
-Note: This was actually the worst we can do---maximize! Even weirder: no local minimizer!
-
-% 2017/01/19
-\subsection{Equality Constraints}
-\begin{align}
-  \min_{u\in\mathcal R^m} {}\ & g(u) \\
-  \text{s.t. } & h(u)=\bm 0, \quad h:\R^m\to\R^k
-\end{align}
-\begin{thm}
-  If $u^*$ is a minimizer/maximizer then $\exists\lambda\in\R^k$ s.t.
-  \begin{align}
-    \pder{L}{u}(u^*,\lambda) &= 0 \\
-    \pder{L}{\lambda}(u^*,\lambda) &= 0 \qquad (\Longleftrightarrow h(u^*)=0)
-  \end{align}
-  where $L(u,\lambda) = g(u) + \lambda\trans h(u)$.
-\end{thm}
-
-\paragraph{Example} [Entropy Maximization]
-
-Given $S=\{x_1,\dots,x_n\}$ and a distribution over $S$ such that it takes the value $x_j$ with probability $p_j$. The entropy is
-\[ E(p) = \sum_{j=1}^n (-p_j \ln p_j). \]
-The mean is
-\[ m = \sum_{j=1}^n p_jx_j. \]
-Problem: Given $m$, find $p$ such that $E$ is maximized.
-\begin{align}
-  \min_{p} {}\ & -\sum_{j=1}^n p_j \ln p_j \\
-  \text{s.t. } & \sum_{j=1}^n p_j x_j = m \\
-               & \sum_{j=1}^n p_j = 1 \\
-               & p_j \ge 0, \ j=1,\dots,n \quad \text{(ignore this\dots)}
-\end{align}
-\begin{align}
-  L &= - \sum p_j \ln p_j + \lambda_1 \left[ \sum p_j x_j -m \right] + \lambda_2 \left[ \sum p_j - 1 \right] \\
-  \pder{L}{p_j} &= -\ln p_j - 1 + \lambda_1 x_j + \lambda_2 = 0 \\
-  p_j &= e^{\lambda_2 - 1 + \lambda_1 x_j}, \quad j=1,\dots,n \qquad (p_j\ge0 \text{ so we're ok with ignoring that})
-\end{align}
-\begin{align}
-  \sum e^{\lambda_2 - 1 + \lambda_1 x_j} x_j &= m && n+2 \text{ equations and} \\
-  \sum e^{\lambda_2 - 1 + \lambda_1 x_j} &= 1 && n+2 \text{ unknowns\dots}
-\end{align}
-No analytical solution, but numerically ``solvable''
-
-\subsection{Inequality Constraints}
-\begin{align}
-  \min_{u\in\mathcal R^m} {}\ & g(u) \\
-  \text{s.t. } & h(u)\le\bm 0, \quad h:\R^m\to\R^k
-\end{align}
-\begin{center}
-  \begin{tikzpicture}[>=latex]
-    \draw (0,0) .. controls (2,3) and (4,-2) .. (10,0) node [anchor=west] {$h=0$};
-    \node [anchor=west] at (10,1) {$h>0$};
-    \node [anchor=west] at (10,-1) {$h<0$};
-
-    \path
-    coordinate (u) at (2.5,0.77)
-    coordinate  (A) at (2,2)
-    coordinate (B) at (3,-0.49);
-    \draw [->] (u) node [dot] {} -- (A) node [anchor=south] {$\nabla g$};
-    \draw [<-,dashed] (B) -- (u) node [anchor=north east] {not opt.};
-
-    \node [dot] (u3) at (6,-0.40) {};
-    \node [anchor=south] at (u3) {$\nabla g=0$};
-    \node [anchor=north,yshift=-2pt] at (u3) {opt};
-
-    \coordinate (u2) at (7.2,-0.47);
-    \coordinate (A2) at (7.15, 1.1);
-    \draw [->] (u2) -- (A2) node [anchor=south] {$\nabla h$};
-    \draw [->] ($(u2)+(-0.05,0)$) node [dot] {} -- ($(u2)!-1!(A2)+(-0.05,0)$) node [anchor=north] (D2) {$\nabla g$};
-    \draw ($(u2)!8pt!(A2)$) coordinate (B2) -- ($(B2)!1!90:(u2)$) coordinate (C2);
-    \draw [shorten >=-0.5pt] (C2) -- ($(C2)!1!90:(B2)$);
-    \draw [->,dashed] ($(u2)+(-0.1,0)$) -- ($(A2)+(-0.1,0)$);
-    \node [anchor=north,yshift=-8pt] at (D2) {optimal};
-
-    \draw [->] (8.5,-0.38) node [dot] (u4) {} -- (8.22,0.9) coordinate (A4);
-    \node [anchor=south] at (A4) {$\nabla g$};
-    \draw [->,dashed] (u4) -- ($(u4)!-0.5!(A4)$) node [anchor=north] {not opt.};
-    \draw [shorten <=-0.5pt] ($(u4)!8pt!(A4)$) coordinate (B4) -- ($(B4)!1!90:(u4)$) coordinate (C4);
-    \draw (C4) -- ($(C4)!1!90:(B4)$);
-
-    \node [dot] (u5) at (4.3,0.05) {};
-    \draw [->] (u5) -- (3.2,-0.8) coordinate (a5);
-    \node [anchor=north] at (a5) {$\nabla g$};
-    \draw [dashed] (u5) -- ($(u5)!-1!(a5)$) coordinate (b5);
-    \draw [dashed] ($(u5)!0.9!90:(a5)$) -- ($(u5)!0.9!90:(b5)$);
-    \draw [->,dashed] (u5) -- ($(u5)!0.6!-75:(b5)$) node [anchor=north east] {better};
-    \node at ($(u5)+(0.1,1)$) {not opt.};
-
-    \node [dot] (u6) at (5,-2) {};
-    \node [anchor=south] at (u6) {$\nabla g=0$};
-    \node [anchor=north] at (u6) {(possibly) opt.};
-
-    \node [dot] (u7) at (1,-1.5) {};
-    \draw [->] (u7) -- +(70:1.2) coordinate (a7);
-    \node [anchor=west] at (a7) {$\nabla g$};
-    \draw [->,dashed] (u7) -- ($(u7)!-1!(a7)$) node [anchor=north] {better};
-    \node [anchor=west] at (u7) {not opt.};
-  \end{tikzpicture}
-\end{center}
-
-We need:
-\begin{itemize}
-\item if $h(u^*)<0$ then $\pder{g}{u}(u^*)=0$
-\item if $h(u^*)=0$ then we need either
-  \begin{gather}
-    \pder{g}{u}(u^*) = 0 \\
-    \shortintertext{or}
-    \pder{g}{u}(u^*) = -\lambda\pder{h}{u}(u^*) \quad \text{for } \lambda>0
-  \end{gather}
-\end{itemize}
-Or, even better,
-\[ \pder{}{u} \left( g(u^*) + \lambda h(u^*) \right) = 0 \quad \text{for } \lambda\ge 0, \]
-where $\lambda h(u^*)=0$. ($h<0\to\lambda=0$, $h=0\to\lambda\ge0$)
-
-In general, if $u\in\R^m$ and $h:\R^m\to\R^k$, we have that $u^*$, if optimal, has to satisfy
-\begin{gather}
-  \pder{}{u} L(u^*,\lambda) = 0 \\
-  h(u^*) \le \bm 0 \\
-  \lambda\trans h(u^*) = 0 \\
-  \lambda \ge \bm 0
-\end{gather}
-where the Lagrangian is $L(u,\lambda) = g(u) + \lambda\trans h(u)$. Note that if we're maximizing, the same holds except we need $\lambda\le 0$.
-
-\paragraph{Example}
-\begin{align}
-  \min {}\ & 2u_1^2 + 2u_1u_2 + u_2^2 - 10u_1 - 10u_2 \\
-  \text{s.t. } & \begin{cases}
-    u_1^2 + u_2^2 \le 5 \\
-    3u_1 + u_2 \le 6
-  \end{cases}
-\end{align}
-\[ L = 2u_1^2 + 2u_1u_2 + u_2^2 - 10u_1 - 10u_2 + \lambda_1 (u_1^2 + u_2^2 - 5) + \lambda_2 (3u_1+u_2 - 6) \]
-FONC:
-\begin{enumerate}[label=\roman*)]
-\item $\partial L/\partial u_1 = 4u_1 + 2u_2 - 10 + 2\lambda_1u_1 + 3\lambda_2$
-\item $\partial L/\partial u_2 = 2u_1 + 2u_2 - 10 + 2\lambda_1u_2 + \lambda_2$
-\item $u_1^2 + u_2^2 \le 5$
-\item $3u_1 + u_2 \le 6$
-\item $\lambda_1(u_1^2 + u_2^2 - 5) = 0$
-\item $\lambda_2(3u_1 + u_2 - 6) = 0$
-\item $\lambda_1 \ge 0$
-\item $\lambda_2 \ge 0$
-\end{enumerate}
-To solve, assume different constraints are active/inactive:
-\begin{enumerate}
-\item Both constraints are inactive ($u_1^2 + u_2^2 < 5$, $3u_1 + u_2 < 6$) $\Longrightarrow \lambda_1=\lambda_2=0$
-  \[ \begin{cases}
-      4u_1 + 2u_2 - 10 = 0 \\
-      2u_1 + 2u_2 - 10 = 0
-    \end{cases}
-    \Longrightarrow
-    \begin{cases}
-      u_1 = 0 \\
-      u_2 = 5
-    \end{cases} \]
-  Note: iii) $0^2 + 5^2 \nleq 5$
-
-  Not feasible
-
-\item Assume constraint 1 is active and constraint 2 is inactive ($u_1^2 + u_2^2 = 5$, $\lambda_2=0$)
-  \[ \begin{cases}
-      4u_1 + 2u_2 - 10 + 2\lambda_1u_1 = 0 \\
-      2u_1 + 2u_2 - 10 + 2\lambda_1u_2 = 0 \\
-      u_1^2 + u_2^2 = 5
-    \end{cases}
-    \Longrightarrow
-    \begin{cases}
-      u_1 = 1 \\
-      u_2 = 2 \\
-      \lambda_1 = 1
-    \end{cases} \]
-  \begin{enumerate}[label=$\square$\hspace{1pt}\llap{\protect\raisebox{2pt}{$\checkmark$}}]
-  \item $\lambda_1 \ge 0$
-  \item $3\cdot 1 + 2 \le 6$
-  \end{enumerate}
-  This is a local minimizer
-
-\item Assume constraint 2 is active and constraint 1 is inactive
-\item Assume both constraints are active
-\end{enumerate}
-
-\paragraph{Kuhn-Tucker Conditions} (KKT conditions, Karush-Kuhn-Tucker)
-\subparagraph{Problem:}
-\begin{equation}
-  \begin{aligned}
-    \min_{u\in\R^m} {}\ & g(u) \\
-    \text{s.t. } & \begin{cases}
-      h_1(u) = 0, & h_1:\R^m\to\R^p \\
-      h_2(u) \le 0, & h_2:\R^m\to\R^k
-    \end{cases}
-  \end{aligned}
-  \label{eq:kkt}
-\end{equation}
-
-\begin{thm}
-  Let $u^*$ be feasible ($h_1=0$, $h_2\le0$). If $u^*$ is a minimizer to \eqref{eq:kkt} than there exists vectors $\lambda\in\R^p$, $\mu\in\R^k$ with $\mu\ge\bm 0$ such that
-  \[ \begin{cases}
-      \displaystyle \pder{g}{u}(u^*) + \lambda\trans \pder{h_1}{u}(u^*) + \mu\trans \pder{h_2}{u}(u^*) = 0 \\[1ex]
-      \mu\trans h_2(u^*) = 0
-    \end{cases} \]
-\end{thm}
-
-Looking ahead: $\min \text{cost}(u(\cdot))$ s.t.\ $\dot x = f(x,u)$ (dynamics), where $u$ is a function. Note the equality constraint.
-
-% 2017/01/24
-\paragraph{Question:} How do we go from $u\in\R^m$ to $u\in\mathcal U$ (function space)?
-\subparagraph{Note:} Function space is a set of functions of a given kind from a set $X$ to a set $Y$
-\begin{enumerate}
-\item linear function
-\item square-integrable functions: $L_2[0,T]:$ $\int_0^T \Vert u(t)\Vert^2 \dif t < \infty$
-\item $C^\infty (\R)$
-\end{enumerate}
-What would $\partial \text{``cost''}/\partial u$ mean?
-
-\section{Directional Derivatives}
-\paragraph{Recall:} To minimize $g(u)$, let $u^*$ be a candidate minimizer and pitch a perturbation on $u^*$ of $\varepsilon v$, where $\varepsilon$ is the scale and $v$ is the direction. Taking Taylor's expansion at the perturbation produces
-
-\begin{center}
-  \begin{tikzpicture}
-    \node [dot] (a) at (0,0) {};
-    \node [dot] (b) at (3,1) {};
-    \draw [>=latex,->,thick] (a) node [anchor=east] {$u^*$} -- (b) node [anchor=west] {$u^*+\varepsilon v$};
-  \end{tikzpicture}
-\end{center}
-
-\begin{gather}
-  g(u^* + \varepsilon v) = g(u^*) + \varepsilon \pder{g}{u}(u^*) v + o(\varepsilon) \\
-  \text{FONC: } \pder{g}{u}(u^*) = 0 \hspace{3cm} 
-\end{gather}
-
-\subparagraph{Note:} $\pder{g}{u}(u^*) v$ tells us how much $g(u)$ increases/decreases in the direction of $v$.
-
-\begin{defi}
-  The directional (Gateaux) derivative is given by
-  \[ \delta g(u;v) = \lim_{\varepsilon\to0} \frac{g(u+\varepsilon v)-g(u)}{\varepsilon} \]
-\end{defi}
-
-\paragraph{Example}
-\[ g(u) = \frac12 u_1^2 - u_1 + 2u_2, \quad g:\R^2\to\R \]
-Let's consider $e_1=[1\ 0]\trans$, $e_2=[0\ 1]\trans$. What is $\delta g(u;e_i)$, $i=1,2$?
-\begin{align}
-  \delta g(u;v) &= \lim_{\varepsilon\to0} \frac{g(u+\varepsilon v)-g(u)}{\varepsilon} \\
-                &= \lim_{\varepsilon\to0} \frac{g(u)+\varepsilon\pder{g}{u}(u) v + o(\varepsilon) - g(u)}{\varepsilon} \\
-                &= \pder{g}{u} (u) v
-\end{align}
-\begin{align}
-  \pder{g}{u}(u) &= [u_1-1\ 2] \\
-  \delta g(u;e_1) &= [u_1-1\ 2] e_1 = u_1-1 \\
-  \delta g(u;e_2) &= [u_1-1\ 2] e_2 = 2 \\
-\end{align}
-
-But the beauty of directional derivatives is that they generalize beyond vectors, $u\in\R^m$, to function spaces ($\mathcal U$) or other ``objects'' like matrices.
-
-\paragraph{Example} $M\in\R^{n\times n}$, $F(M)=M^2$
-
-What is $\pder{F}{M}$? (ponder at home\dots)
-
-We can easily compute $\delta F(M;N)$!
-\begin{align}
-  F(M+\varepsilon N) &= (M+\varepsilon N)(M+\varepsilon N) = M^2 + \varepsilon M N + \varepsilon N M + \varepsilon^2 N^2 \\
-  \delta F(M;N) &= \lim_{\varepsilon\to0} \frac{F(M+\varepsilon N)-F(M)}{\varepsilon} \\
-                     &= \lim_{\varepsilon\to0} \frac{\varepsilon M N + \varepsilon N M + \varepsilon^2 N^2}{\varepsilon} = MN + NM
-\end{align}
-
-\paragraph{Infinite Dimensional Optimization}
-Let $u\in\mathcal U$ (function space) and let $J(u)$ be the cost:
-\[ \min_{u\in\mathcal U} J(u) \]
-
-\begin{thm}
-  If $u^*\in\mathcal U$ is a (local) minimizer then
-  \[ \delta J(u^*;v) = 0, \quad \forall v\in\mathcal U \]
-\end{thm}
-
-\paragraph{Example} Find minimizer $u^*$ to
-\[ J(u) = \int_0^T L(u(t)) \dif t \]
-\begin{align}
-  J(u+\varepsilon v) - J(u) &= \int_0^T L(u(t)+\varepsilon v(t)) \dif t - \int_0^T L(u(t)) \dif t, \quad u,v\in\mathcal U \\
-                            &= \int_0^T \left[ L(u(t)) + \varepsilon \pder{L}{u}(u(t)) v(t) + o(\varepsilon) - L(u(t)) \right] \dif t \\
-  \delta J(u^*;v) &= \lim_{\varepsilon\to0} \frac{J(u+\varepsilon v)-J(u)}{\varepsilon} \\
-                            &= \lim_{\varepsilon\to0} \frac{\int_0^T \varepsilon \pder{L}{u}(u(t)) v(t) \dif t + o(\varepsilon)}{\varepsilon} \\
-                            &= \int_0^T \pder{L}{u}(u(t)) v(t) \dif t \\
-\end{align}
-$u^*$ optimizer:
-\begin{gather}
-  \delta J(u^*;v) = \int_0^T \pder{L}{u}(u(t)) v(t) \dif t = 0 \quad \forall v\in\mathcal U \\
-  \Updownarrow \\
-  \pder{L}{u} (u(t)) = 0 \quad \forall t\in[0,T]
-\end{gather}
-But, we want \emph{optimal control}! We want our cost to look like
-\begin{gather}
-  \int_0^T L(x(t),u(t)) \dif t \\
-  \dot x = f(x,u)
-\end{gather}
-
-\section{Calculus of Variations}
-What happens to $x(t)$ when $u(t)$ changes to $u(t)+\varepsilon v(t)$? Let the system be given by
-\[ \begin{cases}
-    \dot x = f(x,u) \\
-    x(0) = x_0
-  \end{cases} \]
-After perturbation of $u$, the new system is
-\[ \begin{cases}
-    \dot{\hat x} = f(\hat x,u+\varepsilon v) \\
-    x(0) = x_0
-  \end{cases} \]
-
-\pgfmathsetseed{11}
-\begin{figure}
-  \centering
-  \begin{tikzpicture}
-    \draw [thick,->] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
-    \draw [thick,->] (0,-0.5) -- (0,3) node [anchor=east] {};
-    \draw [decorate, decoration={random steps, segment length=7pt, amplitude=5pt}, rounded corners=2pt] (0,1) to[in=180,out=0,distance=3.5cm] (3.5,1) node [anchor=south west] {$u(t)$};
-    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=3pt] (0,2) to[in=180,out=0,distance=3cm] (3.5,2.5) node [anchor=south] {$u(t)+\varepsilon v(t)$};
-
-    \draw [thick,->] (5,0) -- (9.5,0) node [anchor=west] {$t$};
-    \draw [thick,->] (5.5,-0.5) -- (5.5,3) node [anchor=east] {};
-    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=4pt}, rounded corners=3pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=200,out=0,distance=3cm] (9,1.5) node [anchor=south west] {$x(t)$};
-    \draw [decorate, decoration={random steps, segment length=8pt, amplitude=5pt}, rounded corners=2pt] (5.5,0.75) node [anchor=east] {$x_0$} to[in=170,out=30,distance=3cm] (9,2.5) node [anchor=south,yshift=5pt] {$\hat x(t)=x+\varepsilon\eta+o(\varepsilon),\ \eta(0)=0$};
-    \node [dot] at (5.5,0.75) {};
-  \end{tikzpicture}
-  \caption{Variation in $u$ causes a variation in $x$.}
-  \label{fig:var_u_x}
-\end{figure}
-
-\noindent
-Consider
-\[ \tilde x=x+\varepsilon \eta, \]
-where
-\begin{alignat}{2}
-  \dot x&=f(x,u), & x(0) &= x_0 \\
-  \dot \eta &= \pder{f}{x}(x,u) \eta + \pder{f}{u}(x,u) v, \qquad & \eta(0) &= 0
-\end{alignat}
-
-\begin{thm}
-  If $f$ is continuously differentiable in $x$ and $u$ then
-  \[ \hat x(t) = \tilde x(t) + o(\varepsilon) \]
-  \begin{proof}
-    \mbox{}
-    \begin{enumerate}[label=\roman*)]
-    \item Initial conditions:
-      \begin{align}
-        \hat x(0) &= x_0 \\
-        \tilde x(0) &= x(0) + \varepsilon \eta(0) = x_0
-      \end{align}
-    \item Dynamics:
-      \begin{align}
-        \dot{\hat x} &= f(\hat x,u+\varepsilon v) \\
-        \dot{\tilde x} &= \dot x + \varepsilon \dot \eta = f(x,u) + \varepsilon \pder{f}{x}(x,u)\eta + \varepsilon \pder{f}{u}(x,u) v \\
-                     &= f(x+\varepsilon\eta,u+\varepsilon v) + o(\varepsilon) \\
-                     &= f(\tilde x,u+\varepsilon v) + o(\varepsilon)
-      \end{align}
-      We can see that the dynamics of $\hat x(t)$ are equal to those of $\tilde x(t)$ plus higher order terms:
-      \begin{align}
-        \dot{\tilde x} &= f(\tilde x,u+\varepsilon v) + o(\varepsilon) \\
-        \dot{\hat x} &= f(\hat x,u+\varepsilon v)
-      \end{align}
-      Therefore, if our perturbation is small enough, we can model $\hat x(t)$ as $\tilde x(t)$.
-    \end{enumerate}
-  \end{proof}
-\end{thm}
-
-\begin{framed}
-  \hypertarget{taylor_2var}{}
-  Note: Taylor expansion with two elements is
-  \begin{align}
-    h(w+\varepsilon v,z+\varepsilon y) &= h(w,z+\varepsilon y) + \pder{h}{w}(w,z+\varepsilon y)\varepsilon v + o(\varepsilon) \\
-                                       &= \left\{ h(w,z) + \pder{h}{z}(w,z)\varepsilon y + o(\varepsilon) \right\} \\
-                                       & \qquad + \left\{ \pder{h}{w}(w,z)\varepsilon v + \underbrace{\pder{^2 h}{z\partial w}\varepsilon v \odot \varepsilon y}_{o(\varepsilon)} + o(\varepsilon) \right\} \\
-                                       &= h(w,z) + \pder{h}{z}\varepsilon y + \pder{h}{w}\varepsilon v + o(\varepsilon)
-  \end{align}
-\end{framed}
-
-% 2017/01/26
-\paragraph{Last class:} \mbox{}
-\begin{enumerate}
-\item $u\in\U$ (space of functions), $J:\U\to\R$ (cost).
-
-  FONC: If $u^*$ is optimal, then
-  \[ \delta J(u;\nu) = 0 \quad \forall \nu\in\U, \]
-  where the directional derivative is given by
-  \[ \delta J(u;\nu) = \lim_{\varepsilon\to0} \frac{J(u+\varepsilon \nu)-J(u)}{\varepsilon}. \]
-\item If
-  \[ \begin{cases}
-      \dot x = f(x,u) \\
-      x(0) = x_0
-    \end{cases} \]
-  then a variation in $u$:
-  \[ u \longmapsto u+\varepsilon \nu \]
-  results in a variation in $x$:
-  \[ x \longmapsto x+\varepsilon\eta + o(\varepsilon) \]
-  See \autoref{fig:var_u_x}. Note $\eta(0)=0$.
-\end{enumerate}
-
-\subsection{An (Almost) Optimal Control Problem}
-
-Let $\dot x=f(x)$, $x(0)=x_0$. Note we get to pick the initial condition!
-\subparagraph{Problem}
-\begin{gather}
-  \min_{x_0\in\R^m} J(x_0) = \int_0^T L(x(t)) \dif t \\
-  \text{s.t. } \begin{cases}
-    \dot x(t) = f(x(t)) & \text{the \emph{constraint}! (equality)} \\
-    x(0)=x_0
-  \end{cases}
-\end{gather}
-Note every constraint needs a Lagrange multiplier. We have infinitely many constraints:
-\[ \dot x(t) = f(x(t)) \quad \forall t\in[0,T] \]
-We need $\lambda(t)$ as a function of $t$. Also, the sum in the Lagrangian has to become an integral. The continuous-time Lagrangian thus becomes
-\[ \tilde J(x_0,\lambda) = \int_0^T \Big[ L(x(t)) + \lambda\trans(t) (f(x(t))-\dot x(t)) \Big] \dif t \]
-The task is to perturb $x_0$ as $x_0\longmapsto x_0+\varepsilon \nu$, $\nu\in\R^m$ and compute
-\[ \delta \tilde J(x_0;\nu) = \lim_{\varepsilon\to0} \frac{\tilde J(x_0+\varepsilon \nu)-\tilde J(x_0)}{\varepsilon} \]
-and make this equal to 0 $\forall \nu\in\R^m$. The variation in $x$ is
-
-\pgfmathsetseed{11}
-\begin{center}
-  \begin{tikzpicture}
-    \draw [->,thick] (-0.5,0) -- (4,0) node [anchor=west] {$t$};
-    \draw [->,thick] (0,-0.5) -- (0,3);
-    \draw [decorate, decoration={random steps, segment length=7pt, amplitude=5pt}, rounded corners=2pt] (0,1) node [anchor=east] {$x_0$} to[in=180,out=0,distance=3.5cm] (3.5,1) node [anchor=south west] {$x$};
-    \draw [decorate, decoration={random steps, segment length=9pt, amplitude=5pt}, rounded corners=3pt] (0,1.5) node [anchor=east] {$x_0+\varepsilon \nu$} to[in=200,out=0,distance=3.5cm] (3.5,2) node [anchor=south] {$x+\varepsilon\eta(t)+o(\varepsilon)$};
-    \draw [thick] (3.5,0.2) -- (3.5,-0.2) node [anchor=north] {$T$};
-  \end{tikzpicture}
-\end{center}
-
-Note:
-
-\hspace{\parindent}
-\begin{tabular}{cl}
-  $x_0$ & decision variable \\
-  $\nu$ & variation in $x_0$ \\
-  $x(t)$ & trajectory starting at $x_0$ \\
-  $\eta(t)$ & change in trajectory resulting from $\nu$-variation in $x_0$ \\
-  $\lambda(t)$ & time-varying Lagrange multiplier
-\end{tabular}
-
-\begin{align}
-  \tilde J(x_0+\varepsilon \nu) &= \int_0^T \Big\{ L(x(t)) + \lambda\trans(t) [f(x(t)+\varepsilon\eta(t)) - \dot x(t) - \varepsilon\dot\eta(t)] \Big\} \dif t + o(\varepsilon) \\
-                                &= \int_0^T \left[ L(x) + \varepsilon\pder{L}{x}(x)\eta + \lambda\trans \left( f(x) + \varepsilon\pder{f}{x}(x)\eta - \dot x - \varepsilon\dot\eta \right) \right] \dif t + o(\varepsilon) \\
-  \tilde J(x_0+\varepsilon \nu) - \tilde J(x_0) &= \int_0^T \left[ \varepsilon\pder{L}{x}(x)\eta + \lambda\trans\left( \varepsilon\pder{f}{x}\eta - \varepsilon\dot\eta \right) \right] \dif t + o(\varepsilon) \\
-  \delta \tilde J (x_0;\nu) &= \int_0^T \left[ \pder{L}{x}(x)\eta + \lambda\trans\left( \pder{f}{x}\eta - \dot\eta \right) \right] \dif t
-\end{align}
-A powerful idea: we want $\delta\tilde J(x_0;\nu)=0$ $\forall \nu$. Somehow get this in the form
-\[ \int_0^T \Big(\text{stuff}(t)\Big) \eta(t) \dif t = 0 \]
-We can pick $\text{stuff}(t)=0$ $\forall t\in[0,T]$.
-
-In $\delta\tilde J(x_0;\nu)$ we have $\dot\eta$ (problem!). We can solve this using \emph{integration by parts}.
-\[ \int_0^T \lambda\trans \dot\eta \dif t = \lambda\trans(T)\eta(T) - \lambda\trans(0)\eta(0) - \int_0^T \dot\lambda\trans\eta \dif t \]
-Hence,
-\[
-  \delta\tilde J(x_0;\nu) = \int_0^T \underbrace{\big( \pder{L}{x} + \lambda\trans\pder{f}{x} + \dot\lambda\trans \big)}_{\text{pick}=0} \eta \dif t - \underbrace{\lambda\trans(T)}_{\text{pick}=0} \eta(T) + \lambda\trans(0) \underbrace{\eta(0)}_{\nu}
-\]
-We are free to pick $\lambda$ freely if it gives $\delta\tilde J=0$.
-\[ \text{Pick: } \begin{cases}
-    \dot\lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
-    \lambda(T) = 0 & \text{backwards diff. eq}
-  \end{cases} \]
-Under this choice of $\lambda$ we get
-\[ \delta\tilde J(x_0;\nu) = \lambda\trans(0) \nu \]
-This is linear in $\nu$ so the FONC is $\lambda(0)=0$.
-
-Moreover, we really have a ``normal'' optimization problem
-\begin{gather}
-  \min_{x_0\in\R^m} \tilde J(x_0) \\
-  \delta \tilde J(x_0;\nu) = \pder{\tilde J}{x_0} (x_0) \nu
-\end{gather}
-which means that
-\[ \pder{\tilde J}{x_0} = \lambda\trans(0) \]
-If $x_0^*$ minimizes
-\begin{gather}
-  \int_0^T L(x(t)) \dif t \\
-  \text{s.t. } \begin{cases}
-    \dot x(t) = f(x(t)) \\
-    x(0) = x_0^*
-  \end{cases}
-\end{gather}
-then
-\[ \lambda(0) = \bm 0 \]
-where $\lambda(t)$ satisfies
-\[ \begin{cases}
-    \dot \lambda(t) = -\pder{L\trans}{x}(x(t)) - \pder{f\trans}{x}(x(t)) \lambda(t) \\
-    \lambda(T) = 0
-  \end{cases} \]
-
-\paragraph{So what?} We actually have a two-point boundary value problem. 
-\begin{align}
-  \dot x &= f(x) & \dot\lambda &= -\pder{L\trans}{x} - \pder{f\trans}{x} \lambda \\
-  x(0) &= x_0 & \lambda(T) &= 0
-\end{align}
-
-\begin{center}
-  \begin{tikzpicture}
-    \draw [thick,->] (0,0) -- (4,0) node [anchor=west] {$t$};
-    \draw [thick,->] (0,0) -- (0,3);
-    \draw (-0.2,1.5) node [anchor=east] {$x_0$} -- (0.2,1.5);
-    \draw [->,>={Straight Barb[scale length=2]}] (0,1.5) parabola bend (0.6,2) (1.5,1.5);
-    \draw (1.5,1.5) parabola bend (2,1.3) (3.5,2.5);
-
-    \draw [thick,->] (6,0) -- (10,0) node [anchor=west] {$t$};
-    \draw [thick,->] (6,0) -- (6,3);
-    \draw (9.5,0.2) -- (9.5,-0.2) node [anchor=north] {$T$};
-    \draw [-{Straight Barb[scale length=2]}] (9.5,0) .. controls (8.25,0) and (9,1.5) .. (8,1.5) node [anchor=south] {$\lambda$};
-    \draw (8,1.5) .. controls (7,1.25) .. (6,1.5);
-    \draw (6.2,1.5) -- (5.8,1.5) node [anchor=east] {$\lambda(0)$};
-  \end{tikzpicture}
-\end{center}
-We want to find $x_0$ that gives $f(x)$ such that after solving backwards for $\lambda(t)$, we find that
-\[ \lambda(0) = \pder{\tilde J\trans}{x_0} = 0. \]
-This leads to the following:
-
-\paragraph{An algorithm} \mbox{}
-
-\begin{algorithm}
-  \begin{algorithmic}
-    \State Pick $x_{0,0}$
-    \State $k=1$
-    \Repeat
-    \State Simulate $x(t)$ from $x_{0,k}$ over $[0,T]$
-    \State Simulate $\lambda(t)$ from $\lambda(T)=0$ backwards using $x(t)$
-    \State Update $x_{0,k}$ as
-    $ x_{0,k+1} = x_{0,k} - \gamma\lambda(0) $ \Comment{$\lambda(0)$ is the gradient}
-    \State $k\coloneqq k+1$
-    \Until $\lambda(0)=0$
-  \end{algorithmic}
-\end{algorithm}
-
-\paragraph{Example:} \texttt{optinit.m}
-
-\[ \dot x = Ax, \quad L=x\trans Qx-q, \quad Q=Q\trans \succ 0 \]
-\vspace{-2em}
-\begin{align}
-  \dot \lambda &= -2Qx - A\trans\lambda \\
-  \lambda(0) &= 0
-\end{align}
-
-% 2017/01/31
-\subsection{Optimal Timing Control}
-When to switch between modes?
-\begin{equation}
-  \begin{aligned}
-    \dot x &= \begin{cases}
-      f_1(x) & \text{if } t\in[0,\tau) \\
-      f_2(x) & \text{if } t\in[\tau,T]
-    \end{cases} \\
-    x(0) &= x_0
-  \end{aligned} \label{eq:otc}
-\end{equation}
-
-\begin{center}
-  \begin{tikzpicture}
-    \draw [->,thick] (-0.2,0) -- (5.5,0) node [anchor=west] {$t$};
-    \draw [->,thick] (0,-0.2) -- (0,3.2);
-    \draw (4.8,0.2) -- (4.8,-0.2) node [anchor=north] {$T$};
-    \draw (2.2,0.2) -- (2.2,-0.2) node [anchor=north] {$\tau$};
-    \draw (0.2,1) -- (-0.2,1) node [anchor=east] {$x_0$};
-    \draw (0,1) parabola (2.2,2.8);
-    \draw (2.2,2.8) parabola [bend at end] (4.8,1.2) node [anchor=west] {$x$};
-    \node at (1,1.8) {$f_1$};
-    \node at (4,1.8) {$f_2$};
-  \end{tikzpicture}
-\end{center}
-
-\begin{align}
-  & \min_\tau \int_0^T L(x(t)) \dif t = J(\tau) \\
-  & \text{s.t.~\eqref{eq:otc} holds}
-\end{align}
-
-\begin{enumerate}[label=Step \arabic*:]
-\item Augment cost with constraint
-  \[ \tilde J = \int_0^\tau \Big[ L(x) + \lambda\trans(f_1(x)-\dot x) \Big] \dif t + \int_\tau^T \Big[ L(x) + \lambda\trans(f_2(x)-\dot x) \Big] \dif t \]
-\item Variation $\tau\longmapsto\tau+\varepsilon\theta$
-  \begin{center}
-    \begin{tikzpicture}
-      \draw [->,thick] (-0.2,0) -- (5.5,0) node [anchor=west] {$t$};
-      \draw [->,thick] (0,-0.2) -- (0,3.2);
-      \draw (4.8,0.2) -- (4.8,-0.2) node [anchor=north] {$T$};
-      \draw (2.2,0.2) -- (2.2,-0.2) node [anchor=north] {$\tau$};
-      \draw (3,0.2) -- (3,-0.2) node [anchor=north,yshift=3pt] {$\tau+\varepsilon\theta$};
-      \draw (0.2,1) -- (-0.2,1) node [anchor=east] {$x_0$};
-      \draw (0,1) parabola (2.2,1.8);
-      \draw (2.2,1.8) parabola [bend at end] (4.8,1.2) node [anchor=west] {$x$};
-      \node at (1,1.8) {$f_1$};
-      \node at (3.6,1.7) {$f_2$};
-
-      \begin{scope}
-        \clip (4.8,4) rectangle (2.2,1.8);
-        \draw [dashed] (2.2,1.8) parabola bend (0,1) (3,2.5);
-        \draw [dashed] (3,2.5) parabola [bend at end] (5.4,1.9);
-      \end{scope}
-      \node [anchor=west] at (4.8,1.9) {$x+\varepsilon\eta+o(\varepsilon)$};
-      \node at (2.4,2.4) {$f_1$};
-      \node at (3.9,2.5) {$f_2$};
-    \end{tikzpicture}
-  \end{center}
-\item Compute $\delta\tilde J(\tau;\theta)$
-\end{enumerate}
-\begin{align}
-  \tilde J(\tau+\varepsilon\theta) &= \int_0^{\tau+\varepsilon\theta} \Big\{ L(x+\varepsilon\eta) + \lambda\trans[f_1(x+\varepsilon\eta)-\dot x-\varepsilon\dot\eta] \Big\} \dif t \\
-                                   & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ L(x+\varepsilon\eta) + \lambda\trans[f_2(x+\varepsilon\eta)-\dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \\
-  \intertext{Note that $\eta=\dot\eta=0$ on $[0,\tau)$.}
-  \tilde J(\tau+\varepsilon\theta) &= \int_0^\tau \Big\{ L(x) + \lambda\trans[f_1(x)-\dot x] \Big\} \dif t \\
-                                   & \qquad + \int_\tau^{\tau+\varepsilon\theta} \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_1(x+\varepsilon\eta)}_{f_1(x)+\varepsilon\pder{f_1}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t \\
-                                   & \qquad + \int_{\tau+\varepsilon\theta}^T \Big\{ \underbrace{L(x+\varepsilon\eta)}_{L(x)+\varepsilon\pder{L}{x}\eta} + \lambda\trans[\underbrace{f_2(x+\varepsilon\eta)}_{f_2(x)+\varepsilon\pder{f_2}{x}\eta} - \dot x-\varepsilon\dot\eta] \Big\} \dif t + o(\varepsilon) \displaybreak \\
-  \delta\tilde J(\tau;\theta) &= \lim_{\varepsilon\to0} \frac{\tilde J(\tau+\varepsilon\theta) - \tilde J(\tau)}{\varepsilon} \\
-  \tilde J(\tau+\varepsilon\theta) - \tilde J(\tau) &= \int_0^\tau 0\cdot\dif t + \underbrace{ \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big(f_1(x)+\varepsilon\pder{f_1}{x}\eta - f_2(x) - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_1} \\
-                                   & \qquad + \underbrace{ \int_{\tau+\varepsilon\theta}^T \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t }_{\displaystyle I_2} + o(\varepsilon)
-\end{align}
-
-\begin{framed}
-  \begin{thm}[Mean-value theorem]
-    \[ \int_{t_1}^{t_2} h(t) \dif t = (t_2-t_1) h(\xi) \quad \text{for some}\ \xi\in[t_1,t_2] \]
-  \end{thm}
-\end{framed}
-
-\noindent
-The first integral is
-\begin{align}
-  I_1 &= \int_\tau^{\tau+\varepsilon\theta} \left\{ \varepsilon\pder{L}{x}\eta + \lambda\trans \left[f_1(x)+\varepsilon\pder{f_1}{x}\eta-\varepsilon\dot\eta-f_2(x)\right] \right\} \dif t \\
-      &= \varepsilon\theta \Big\{ \lambda\trans(\xi) \big[ f_1(x(\xi)) - f_2(x(\xi)) \big] \Big\} + o(\varepsilon)
-\end{align}
-Note that as $\varepsilon\to0$, $\xi\to\tau$. Using integration by parts, the second integral is
-\begin{align}
-  \int_\tau^T \lambda\trans \dot\eta \dif t &= \lambda\trans(T) \eta(T) - \lambda\trans(\tau) \underbrace{\eta(\tau)}_{=0} - \int_\tau^T \dot\lambda\trans \eta \dif t \\
-  I_2 &= \int_\tau^T \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t - \underbrace{ \int_\tau^{\tau+\varepsilon\theta} \left[ \varepsilon\pder{L}{x}\eta + \lambda\trans \Big( \varepsilon\pder{f_2}{x}\eta - \varepsilon\dot\eta \Big) \right] \dif t }_{o(\varepsilon)} \\
-                                            &= \varepsilon \int_\tau^T \left[ \pder{L}{x} + \lambda\trans \pder{f_2}{x} + \dot\lambda\trans \right] \eta \dif t - \varepsilon \lambda\trans(T)\eta(T) + o(\varepsilon)
-\end{align}
-Hence,
-\begin{align}
-  \delta\tilde J(\tau;\theta) &= \lim_{\varepsilon\to0} \frac{\tilde J(\tau+\varepsilon\theta) - \tilde J(\tau)}{\varepsilon} \\
-                              &= \theta\lambda\trans(\tau) \Big[ f_1(x(\tau)) - f_2(x(\tau)) \Big] + \int_\tau^T \left[ \pder{L}{x} + \lambda\trans \pder{f_2}{x} + \dot\lambda\trans \right] \eta \dif t - \lambda\trans(T)\eta(T)
-\end{align}
-
-\begin{enumerate}[resume*]
-\item Select the \emph{costate} $\lambda(t)$. The key idea is to get rid of any term that has $\eta$ in it, i.e.
-  \begin{align}
-    \dot\lambda &= -\pder{L\trans}{x} - \pder{f_2\trans}{x} \lambda \quad \text{on } [\tau,T] \\
-    \lambda(T) &= 0
-  \end{align}
-\item With this choice of $\lambda(t)$, we have
-  \[ \delta\tilde J(\tau;\theta) = \theta\lambda\trans(\tau) \Big[ f_1(x(\tau)) - f_2(x(\tau)) \Big] = \pder{\tilde J}{\tau} \theta. \]
-  Therefore,
-  \[ \pder{\tilde J}{\tau} = \lambda\trans(\tau) \Big[ f_1(x(\tau)) - f_2(x(\tau)) \Big] = 0 \quad \text{(for optimality)} \]
-\end{enumerate}
-
-\paragraph{Algorithm} \mbox{}
-\begin{algorithm}
-  \begin{algorithmic}
-    \State Pick $\tau_0$
-    \State $k=0$
-    \Repeat
-    \State Simulate $x$ forward in time from $x(0)=x_0$
-    \State Simulate $\lambda$ backwards from $\lambda(T)=0$
-    \State Update $\tau_k$ as
-    $ \tau_{k+1} = \tau_k - \gamma\lambda\trans(\tau_k) \big[ f_1(x(\tau_k)) - f_2(x(\tau_k)) \big] $
-    \State $k\coloneqq k+1$
-    \Until $\Vert \lambda\trans(f_1-f_2) \Vert < \varepsilon$
-  \end{algorithmic}
-\end{algorithm}
-
-Where are we going? Come up with general principles for $\min_{u\in\mathcal U} J(u)$:
-\begin{itemize}
-\item Costate equations
-\item Optimality conditions
-\item Algorithms
-\item Applications
-\end{itemize}
+\chapter{The Maximum Principle}
 
 % 2017/02/02
-\subsection{The Bolza Problem}
+\section{The Bolza Problem}
 Up until now, we have optimized with respect to finite-dimensional parameters. Today, we will minimize with respect to $u\in\mathcal U$.
 
 \begin{align}
@@ -2428,7 +1284,7 @@ This last condition is known as the \emph{Transversality condition}.
     \node [dot] (B) at (2,-2) {};
     \node [right] at (B) {B};
     \draw (A) .. controls ++(1,0.5) and ++(-1,-1) .. ++(2,-0.5) .. controls ++(0.5,0.5) and ++(-0.5,-0.5) .. (B);
-    \draw [double equal sign distance,-Implies] (-1,-3.5) -- ++(45:1) node [below right] {wind, current};
+    \draw [double equal sign distance,-Implies,thick] (-1,-3.5) -- ++(45:1) node [below right] {wind, current};
   \end{tikzpicture}
 \end{center}
 The dynamics are
@@ -2448,7 +1304,7 @@ For minimum time, $L=1$.
   0 &= \pder{H}{\phi} = -v \lambda_x \sin\phi + v \lambda_y \cos\phi \\
   \phi &= \tan^{-1} \left(\frac{\lambda_y}{\lambda_x}\right)
 \end{align}
-Since this is a conservative system, $H(t)=H(T)=0$, because $\partial\Psi/\partial T=0$.
+Since this is a conservative system and $\partial\Psi/\partial T=0$, then $H(t)=H(T)=0$.
 \begin{align}
   -1 &= \lambda_x(v\cos\phi + c_1) + \lambda_y(v\sin\phi + c_2) \\
   \lambda_x &= - \frac{\cos\phi}{v + c_1\cos\phi + c_2\sin\phi} \\
@@ -2460,4 +1316,345 @@ Since this is a conservative system, $H(t)=H(T)=0$, because $\partial\Psi/\parti
 \end{align}
 This is an ODE that completely determines $\phi$ if we just had $\phi_0$.
 
-\end{document}
+% 2017/03/07
+\paragraph{Example} We want to drive a car and stop at a stop sign as quickly as possible. Assume that the stop sign is at the origin, and our control is the acceleration ($\ddot x=u$).
+\begin{align}
+  & \min_{u,T} \int_0^T \!\dif t \\
+  & \text{s.t. } \begin{dcases}
+    \dot x_1 = x_2, & x(0) = x_0 \\
+    \dot x_2 = u, & x(T) = 0
+  \end{dcases}
+\end{align}
+Recall the transversality condition:
+\begin{gather}
+  \left. H + \pder{\Psi}{T} \right|_{t=T} = 0.
+\end{gather}
+For minimum-time problems, $L=1$ and $\Psi=0$, so $\lambda\trans f|_{t=T} = -1$.
+\begin{gather}
+  H = 1 + \lambda_1 x_2 + \lambda_2 u \\
+  \lambda_1(T) \underbrace{x_2(T)}_{\mathclap{=0 \text{ (rest)}}} + \lambda_2(T) u(T) = -1 \\
+  \boxed{\lambda_2(T) u(T) = -1} \\
+  \pder{H}{u} = \boxed{ \lambda_2 = 0 },
+\end{gather}
+i.e.\ $0\cdot u(T) = -1$!? This problem is ill-posed; we need to go infinitely fast\dots
+
+\begin{description}
+\item[Idea 1:] Constrain $u$. We don't know how to do this.
+\item[Idea 2:] Pay for gas. This is a design choice.
+\end{description}
+
+For the second idea,
+\begin{align}
+  & \min_{u,T} \int_0^T \! \frac{1}{2} u^2(t) \dif t \\
+  & \text{s.t. } \begin{dcases}
+    \dot x_1 = x_2, & x(0) = x_0 \\
+    \dot x_2 = u, & x(T) = 0
+  \end{dcases}
+\end{align}
+\begin{gather}
+  H = \frac{1}{2} u^2 + \lambda_1 x_2 + \lambda_2 u \\
+  \frac{1}{2} u^2(T) + \lambda_1(T) x_2(T) + \lambda_2(T) u(T) = 0 \\
+  \boxed{ \frac{1}{2} u^2(T) + \lambda_2(T) u(T) = 0 } \\
+  \pder{H}{u} = u + \lambda_2 = 0 \Longrightarrow u = -\lambda_2 \\
+  \frac{1}{2} \lambda_2^2(T) - \lambda_2^2(T) = 0 \\
+  \boxed{\lambda_2(T) = 0} \displaybreak \\
+  \dot\lambda_1 = -\pder{H}{x_1} = 0 \Longrightarrow \lambda_1 = c \\
+  \dot\lambda_2 = -\pder{H}{x_2} = -\lambda_1 \Longrightarrow \lambda_2 = -ct + d \\
+  \lambda_2(T) = -cT + d = 0 \Longrightarrow T = \frac{d}{c} \\
+  \dot x_2 = u = -\lambda_2 = ct - d \\
+  x_2 = c \frac{t^2}{2} - dt + x_{2,0} \\
+  \dot x_1 = x_2 \Longrightarrow x_1 = c \frac{t^3}{6} - d \frac{t^2}{2} + x_{2,0} t + x_{1,0} \\
+  \begin{dcases}
+    x_1(T) = c\frac{T^3}{6} - d \frac{T^2}{2} + x_{2,0} T + x_{1,0} = 0 \\
+    x_2(T) = c\frac{T^2}{2} - dT + x_{2,0} = 0 \\
+    T = \frac{d}{c}
+  \end{dcases} \\
+  \Longrightarrow \begin{dcases}
+    c = -\frac{2}{3} \frac{x_{2,0}^2}{x_{1,0}} \\
+    d = \sqrt{-\frac{4}{3} \frac{x_{2,0}^3}{x_{1,0}}} \\
+    T = \frac{d}{c} \\
+    u = ct - d
+  \end{dcases}
+\end{gather}
+
+Fine, but we really want to get there as quickly as possible! We have to constrain $u$, e.g.\ $u(t)\in[-1,1]$, $\forall t\in[0,T]$. How do we deal with the constraints on $u$?
+
+\section{Hamilton's Minor ``Mistake''}
+
+\begin{align}
+  \min_{u\in\mathcal{U}_{\text{constr.}}} {} & \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  \text{s.t. } & \dot x = f(x,u,t) \\
+            & x(0) = x_0 \\
+            & ( u(t) \in U )
+\end{align}
+Augment the cost:
+\begin{gather}
+  \tilde J(u) = \int_0^T \Big( H(x,u,t,\lambda) - \lambda\trans \dot x \Big) \dif t + \Psi(x(T))
+\end{gather}
+Vary $u\mapsto u+\varepsilon v$ s.t.\ $u+\varepsilon v\in\mathcal U_{\text{constr.}} \Rightarrow x\mapsto x +\varepsilon\eta+o(\varepsilon)$:
+\begin{gather}
+\begin{align}
+  \tilde J(u+\varepsilon v) &= \int_0^T \Big( H(x+\varepsilon\eta,u+\varepsilon v,t,\lambda) - \lambda\trans\dot x - \lambda\trans\varepsilon\dot\eta \Big) \dif t + \Psi(x(T) + \varepsilon\eta(T)) + o(\varepsilon) \\
+  \shortintertext{Instead of computing $\delta\tilde J(u;v)$, let's check $\Delta\tilde J=\tilde J(u+\varepsilon v)-\tilde J(u)$. If $\Delta\tilde J\ge 0$ $\forall v$ s.t.\ $u+\varepsilon v\in\mathcal U_{\text{constr.}}$ for $\varepsilon$ small enough, then $u$ is a local minimum!}
+  \Delta\tilde J &= \int_0^T \Big[ H(x+\varepsilon\eta,u+\varepsilon v,t,\lambda) - H(x,u,t,\lambda) - \lambda\trans(\dot x + \varepsilon\dot\eta - \dot x) \Big] \dif t \\
+                            & \qquad + \Psi(x(T)+\varepsilon\eta(T)) - \Psi(x(T)) + o(\varepsilon) \\
+  \shortintertext{Only Taylor expanding w.r.t.\ $x$:}
+  \Delta\tilde J &= \int_0^T \left[\varepsilon\pder{H}{x}(x,u,t,\lambda)\eta - \varepsilon\lambda\trans\dot\eta \right] \dif t + \int_0^T \big[ H(x,u+\varepsilon v,t,\lambda) - H(x,u,t,\lambda) \big] \dif t \\
+                            & \qquad + \varepsilon\pder{\Psi}{x}(x(T))\eta(T) + o(\varepsilon) \\
+                            &= \varepsilon \int_0^T \left( \pder{H}{x} + \dot\lambda\trans \right) \eta\dif t + \varepsilon\lambda\trans(0)\eta(0) - \varepsilon\lambda\trans(T)\eta(T) + \varepsilon\pder{\Psi}{x}(x(T))\eta(T) \\
+                            & \qquad + \int_0^T \big[ H(x,u+\varepsilon v,t,\lambda) - H(x,u,t,\lambda) \big]\dif t + o(\varepsilon) \\
+  \shortintertext{With $\dot\lambda=-\partial H\trans/\partial x$ and $\lambda(T)=\partial\Psi(x(T))/\partial x$,}
+  \Delta\tilde J &= \int_0^T \big[ H(x,u+\varepsilon v,t,\lambda) - H(x,u,t,\lambda) \big]\dif t + o(\varepsilon)
+\end{align} \\
+  \shortintertext{Here, Hamilton did Taylor's expansion and set $\partial H/\partial u=0$. Instead, Pontryagin desired $\Delta\tilde J\ge 0$ $\forall v|u+\varepsilon v\in\mathcal U_{\text{constr.}}$, $\varepsilon$ small enough, i.e.\ we need}
+                            H(x,u^*+\varepsilon v,t,\lambda) \ge H(x,u^*,t,\lambda) \\
+  \shortintertext{$\forall t\in[0,t]$, $\forall v|u+\varepsilon v\in\mathcal U_{\text{constr.}}$, $\varepsilon$ small enough. That is, we need}
+  u^* = \arg\min_u H(x,u,t,\lambda)
+\end{gather}
+In summary,
+\begin{align}
+  &\text{Hamilton: } \pder{H}{u} = 0 \\
+  &\text{Pontryagin: } \min_u H
+\end{align}
+
+\begin{oframed}
+\begin{thm}[Pontryagin's Maximum Principle (PMP)]
+  Consider the problem:
+  \begin{align}
+    \min_{u,T} {} & \int_0^T\! L(x,u,t)\dif t + \Psi(x(T),T) \\
+    \text{s.t. } & \begin{aligned}[t]
+      & \dot x = f(x,u,t) \\
+      & u(t)\in U(x,t), && \forall t\in[0,T] \\
+      & x_i(0) = x_{i0}, && i\in\mathcal I \\
+      & x_j(T) = x_{jT}, && j\in\mathcal T
+    \end{aligned} 
+  \end{align}
+  The necessary condition for optimality is
+  \begin{align}
+    & H = L + \lambda\trans f \\
+    & \dot\lambda = -\pder{H\trans}{x} \\
+    & \lambda_j(0) = 0, \quad j\not\in\mathcal I \\
+    & \lambda_i(T) = \pder{\Psi}{x_i}(x(T)), \quad i\not\in\mathcal T \\
+    & \left. H + \pder{\Psi}{T} \right|_{t=T} = 0 \\
+    & u^*(x,t,\lambda) = \arg\min_{\mathclap{u\in U(x,t)}} \; H(x,u,t,\lambda)
+  \end{align}
+\end{thm}
+\end{oframed}
+
+% 2017/03/09
+We have two paths to solve optimality problems: we always start with the Hamiltonian, find the costate dynamics and boundary conditions, and apply the transversality condition; then, we can either apply calculus of variations (COV) or Pontryagin's Maximum Principle (PMP). COV only works for unconstrained problems, while with PMP we can deal with constraints.
+
+\section{Bang-Bang Control}
+Return to the car problem:
+\begin{align}
+  & \min_{u,T} \int_0^T \!\dif t \\
+  & \text{s.t. } \adjustbox{valign=t}{$
+    \begin{dcases}
+      \begin{aligned}
+        \dot x_1 &= x_2, & x_1(0) &= x_{1,0}, & x_1(T) &= 0 \\
+        \dot x_2 &= u, & x_2(0) &= x_{2,0}, & x_2(T) &= 0 \\
+      \end{aligned} \\
+      u(t)\in[-1,1] \quad \forall t\in[0,T]
+    \end{dcases}
+  $}
+\end{align}
+How do we minimize $H$ w.r.t.\ $u$?
+\begin{align}
+  H &= 1 + \lambda_1 x_2 + \lambda_2 u
+\end{align}
+Clearly, we minimize $H$ by letting
+\begin{gather}
+  u = \begin{dcases}
+    -1, & \lambda_2 > 0 \\
+    +1, & \lambda_2 < 0 \\
+    \text{??}, & \lambda_2 = 0
+  \end{dcases}
+  = -\sign(\lambda_2)
+\end{gather}
+Therefore, the optimal $u$ switches between $-1$ and $+1$ (bang-bang control).
+\begin{gather}
+  \dot \lambda_1 = -\pder{H}{x_1} = 0 \Longrightarrow \lambda_1 = c \\
+  \dot \lambda_2 = -\pder{H}{x_2} = -\lambda_1 \Longrightarrow \lambda_2 = -ct + d
+\end{gather}
+Notice that $\lambda_2(t)$ is a line, so it has at most one sign change. Thus, $u$ also changes sign (from $\pm1$ to $\mp1$) at most one time.
+
+\begin{center}
+  \begin{tikzpicture}
+    \def\T{4.25}
+    
+    \draw [thick,->] (-1,0) -- (5,0) node [right] {$t$};
+    \draw [thick,->] (0,-2.5) -- (0,2.5) node [above] {$\lambda_2$};
+    \draw [thick] (\T,0.2) -- (\T,-0.2) node [below] {$T$};
+
+    \draw (0,1) -- (\T,2.25) node [right] {0 sign changes};
+    \draw (0,-1) -- (\T,1) node [right] {1 sign change};
+    \draw (0,2) -- (\T,-2) node [right] {1 sign change};
+    \draw (0,-2.25) -- (\T,-1) node [right] {0 sign changes};
+    \draw [line width=2.5pt] (0,0) node [pin=above left:{$\lambda_2=0$}] {} -- (\T,0);
+  \end{tikzpicture}
+\end{center}
+
+Let's solve this for all $x_0$!
+\begin{enumerate}[label=\roman*)]
+\item Assume $\lambda_2>0$ $\forall t\in[0,T]$, $\therefore u = -1 \quad \forall t\in[0,T]$
+  \begin{align}
+    \dot x_2 &= -1 \Longrightarrow x_2 = -t + k_1 \\
+    x_2(T) &= 0 = -T + k_1 \Longrightarrow k_1 = T \\
+    x_2(t) &= T - t \Longrightarrow x_2 > 0,\ t\in[0,T) \\
+    \dot x_1 &= x_2 = T - t \Longrightarrow x_1 = -\frac{t^2}{2} + Tt + k_2 \\
+    x_1(T) &= 0 = -\frac{T^2}{2} + T^2 + k_2 \Longrightarrow k_2 = -\frac{T^2}{2} \\
+    x_1(t) &= -\frac{t^2}{2} + Tt - \frac{T^2}{2} = -\frac{(T-t)^2}{2} \quad (<0,\ t\in[0,T)) \\
+           &= -\frac{x_2^2(t)}{2}
+  \end{align}
+  Let's consider the curve
+  \begin{gather}
+    \begin{bmatrix}
+      -x_2^2/2 \\ x_2
+    \end{bmatrix}
+  \end{gather}
+  for $x_2\ge 0$. If $x_0$ lies on this curve, use $u=-1$ and drive to the origin.
+
+\item Assume $u=+1 \quad \forall t\in[0,T]$
+  \begin{align}
+    x_2 &= t - T \quad (\le 0 \text{ on } [0,T]) \\
+    x_1 &= \frac{x_2^2}{2} \quad (\ge 0)
+  \end{align}
+  For this curve, use $u=+1$.
+\end{enumerate}
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-3,0) -- (3,0) node [right] {$x_1$};
+    \draw [thick,->] (0,-3) -- (0,3) node [above] {$x_2$};
+    \node [dot] at (0) {};
+
+    \draw [rotate=90] (0) parabola (3,3) node [above] {$[-x_2^2/2,\ x_2]\trans,\ x_2\ge 0$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90] (0,0) parabola (2.12,1.5);
+    \node [pin={[pin distance=1cm]30:{curve if $u=-1$ $\forall t$}}] at (-0.8,1.5) {};
+
+    \draw [rotate=-90] (0) parabola (3,3) node [below] {$[x_2^2/2,\ x_2]\trans,\ x_2\le 0$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=-90] (0,0) parabola (2.12,1.5);
+    \node [pin={[pin distance=1cm]30:{curve if $u=+1$ $\forall t$}}] at (0.8,-1.5) {};
+  \end{tikzpicture}
+\end{center}
+
+What happens when we do not start on the curves? We start with a certain $u$ depending on $x_0$ and perform a single switch of $u$ when we encounter one of the initial curves that travel to the origin. Note that for the case $\lambda_2=0 \forall t$, we start at the stop sign at rest, so the control does not matter.
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-3,0) -- (3,0) node [right] {$x_1$};
+    \draw [thick,->] (0,-3) -- (0,3) node [above] {$x_2$};
+    \node [dot] at (0) {};
+    \draw [rotate=90,ultra thick] (0) parabola (3,3) node [above] {$u=-1$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90] (0,0) parabola (2.12,1.5);
+    \draw [rotate=-90,ultra thick] (0) parabola (3,3) node [below] {$u=+1$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=-90] (0,0) parabola (2.12,1.5);
+
+    \draw [rotate=90,xshift=-1cm,yshift=1cm] (-3,3) node [below] {off to $\infty$} parabola bend (0,0) (3,3) node [above left] {$u=-1$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=-1cm,yshift=1cm] (0,0) parabola (2.12,1.5);
+    \draw [very thin,->,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=-1cm,yshift=1cm] (0,0) parabola (-2.12,1.5);
+
+    \draw [rotate=90,xshift=-0.5cm,yshift=0.5cm] (0) parabola (3,3);
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=-0.5cm,yshift=0.5cm] (0,0) parabola (2.12,1.5);
+    \draw [rotate=90,xshift=-1.5cm,yshift=1.5cm] (0) parabola (3,3);
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=-1.5cm,yshift=1.5cm] (0,0) parabola (2.12,1.5);
+
+    \draw [rotate=90,xshift=0.5cm,yshift=-0.75cm] (0) parabola (3,3);
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=0.5cm,yshift=-0.75cm] (0,0) parabola (2.12,1.5);
+    \draw [rotate=90,xshift=0.5cm,yshift=-3cm] (0) parabola (3,3) node [right,xshift=1cm] {$u=-1$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=0.5cm,yshift=-3cm] (0,0) parabola (2.12,1.5);
+
+    \node [dot] at (0.72,-1.46) {};
+    \clip (-3,3.5) rectangle (3,-1.46);
+    \draw [rotate=90,xshift=0.5cm,yshift=-2cm] (-3,3) parabola bend (0,0) (3,3);
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90,xshift=0.5cm,yshift=-2cm] (0,0) parabola (2.12,1.5);
+  \end{tikzpicture}
+\end{center}
+
+\clearpage
+The optimal solution is given by the following \emph{switching curve}.
+\begin{center}
+  \begin{tikzpicture}
+    \draw [thick,->] (-3,0) -- (3,0) node [right] {$x_1$};
+    \draw [thick,->] (0,-3) -- (0,3) node [above] {$x_2$};
+    \node [dot] at (0) {};
+
+    \draw [rotate=90] (0) parabola (3,3) node [above] {$[-x_2^2/2,\ x_2]\trans,\ x_2\ge 0$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=90] (0,0) parabola (2.12,1.5) node [above right] {$u=-1$};
+
+    \draw [rotate=-90] (0) parabola (3,3) node [below] {$[x_2^2/2,\ x_2]\trans,\ x_2\le 0$};
+    \draw [very thin,-<,>={Straight Barb[scale=3,line width=1pt]},rotate=-90] (0,0) parabola (2.12,1.5) node [below left] {$u=+1$};
+
+    \node [right] at (1,1) {$\boxed{u=-1}$};
+    \node [left] at (-1,-1) {$\boxed{u=+1}$};
+  \end{tikzpicture}
+\end{center}
+
+\begin{description}
+\item[Note 1:] Bang-bang control typically involves
+  \begin{enumerate}[label=\alph*),nolistsep]
+  \item finding the number of switches
+  \item find the switching surfaces
+  \end{enumerate}
+\item[Note 2:] This is a feedback law! ($u$ depends on $x$!!)
+\end{description}
+
+\subsection{Linear Systems (scalar input)}
+\begin{align}
+  \min_{u,T} {} & \int_0^T \!\dif t \\
+  \text{s.t. } & \dot x = Ax + Bu \\
+                & x(0) = x_0, \quad x(T) = 0 \\
+                & u\in[-1,1] \\
+  H &= 1 + \lambda\trans (Ax + Bu) \\
+  u &= -\sign (\lambda\trans B) \quad \text{(bang-bang)}
+\end{align}
+Aside\dots
+\begin{align}
+  \dot x &= f(x) + g(x) u \quad \text{(control affine)} \\
+  H &= 1 + \lambda\trans f + \lambda\trans g u \\
+  u &= -\sign (\lambda\trans g(x)) \quad \text{(bang-bang)}
+\end{align}
+Back to linear\dots
+\begin{align}
+  \dot\lambda &= -\pder{H\trans}{x} = -A\trans\lambda \\
+  \lambda(t) &= e^{-A\trans t} \lambda_0 \\
+  u(t) &= -\sign\left( \lambda_0\trans e^{-At} B \right)
+\end{align}
+How do we find $\lambda_0$?
+\begin{align}
+  \dot x &= Ax + Bu, \quad x(0) = x_0 \\
+  x(T) &= e^{AT} x_0 + \int_0^T e^{A(T-\tau)} Bu(\tau) \dif\tau \\
+  x(T) &= 0 = e^{AT}x_0 - \int_0^T e^{A(T-t)} B \sign \left( \lambda_0\trans e^{-At} B \right) \dif t \label{eq:linsys_xT}
+\end{align}
+\emph{Problem 1:} Given $x_0$, figure out $\lambda_0$ from \eqref{eq:linsys_xT}. Then, $u=-\sign\left( \lambda_0\trans e^{-At} B \right)$. This has to be done numerically in general (not super simple\dots).
+
+\bigskip
+\noindent
+\emph{Problem 2:} Find all $x_0$s from which it takes the same amount of time to get to $x(T)=0$.
+\begin{align}
+  e^{At}x_0 &= \int_0^T e^{A(T-t)} B \sign \left( \lambda_0\trans e^{-At} B \right) \dif t \\
+  x_0 &= \int_0^T e^{-At} B \sign \left( \lambda_0\trans e^{-At} B \right) \dif t \label{eq:linsys_x0}
+\end{align}
+Fix $T$. By varying $\lambda_0$, we will get the $x_0$s that take time $T$ to go to $x(T)=0$ optimally.
+\begin{center}
+  \begin{tikzpicture}
+    \node [dot] at (0) {};
+    \node [below,yshift=-1pt] at (0) {$O$};
+    \draw [decorate,decoration={snake,segment length=1cm}] (0) circle (2);
+    \path (0) -- ++(40:2.2) coordinate (a);
+    \draw [{Straight Barb[scale=2]}-,thick] (a) to[out=40,in=180] ++(20:1.5) node [right,align=left] {contours of \\ constant \\ time-to-go};
+
+    \path (0) -- ++(-20:2.2) coordinate (b);
+    \draw [{Straight Barb[scale=2]}-,thick] (b) to[out=-30,in=180] ++(-20:1.5) node [right] {$(T,\lambda_0)\Rightarrow u$};
+  \end{tikzpicture}
+\end{center}
+So by solving problem 2, we find $\lambda_0$ associated with all $x_0$, i.e.\ we have ``solved'' problem 1 as well.
+
+% 2017/03/14
+
+% 2017/03/16
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../notes"
+%%% End:

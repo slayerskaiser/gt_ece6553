@@ -1,0 +1,69 @@
+\nonstopmode
+
+\documentclass[letterpaper,12pt,titlepage]{report}
+\usepackage{amsthm,amssymb}
+\usepackage{mathtools}
+\mathtoolsset{showonlyrefs}
+\usepackage{bm}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{framed}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,patterns,calc,decorations.pathmorphing,intersections}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.9}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{adjustbox}
+\usepackage{array}
+
+\usepackage[pdfpagelabels]{hyperref}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[L]{K.\ Okkelberg}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\newcommand*\dif{\mathop{}\!\mathrm{d}}
+\newcommand{\trans}{^\text{T}}
+\newcommand{\herm}{^\text{H}}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\trace}{trace}
+\DeclareMathOperator{\sign}{sign}
+\let\Pr\relax
+\DeclareMathOperator{\Pr}{P}
+\newcommand*\pder[2]{\frac{\partial #1}{\partial #2}}
+\newcommand*\R{\mathbb{R}}
+\newcommand*\U{\mathcal{U}}
+
+\theoremstyle{plain}
+\newtheorem*{thm}{Theorem}
+\theoremstyle{definition}
+\newtheorem*{defi}{Definition}
+
+\tikzstyle{line} = [draw, thick, >=latex]
+\tikzstyle{dot} = [circle,fill=black,inner sep=0pt,minimum size=4pt]
+\tikzset{>=latex}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\title{ECE 6553: Optimal Control Notes}
+\author{Klaus Z.\ Okkelberg}
+\date{Spring 2017}
+\maketitle
+
+\hypersetup{pageanchor=true}
+
+\tableofcontents
+
+\include{ch1/notes_1}
+\include{ch2/notes_2}
+\include{ch3/notes_3}
+
+\end{document}
