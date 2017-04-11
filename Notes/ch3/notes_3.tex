@@ -1808,6 +1808,111 @@ We still have
 The only change from the unconstrained control version is the method by which $u^*(x,t,\lambda)$ is found.
 
 % 2017/03/16
+\paragraph{Example} \mbox{}
+\begin{align}
+  \min_u {} & \frac12 \int_0^T u^2(t)\dif t + \frac12 \Vert x(T)\Vert^2 \\
+  \text{s.t. } & \dot x=g(t) u, \quad g(t)\in\R^n \\
+            & |u(t)| \le 1 \ \forall t \\
+            & \Rightarrow \begin{dcases}
+              u(t) - 1 \le 0 \\
+              -u(t) - 1 \le 0
+            \end{dcases}
+\end{align}
+\begin{align}
+  H &= \frac12 u^2 + \lambda\trans gu \\
+  \widetilde H &= \frac12 u^2 + \lambda\trans gu + \mu_1(u-1) + \mu_2(-u-1) \\
+  \dot\lambda &= -\pder{\widetilde H\trans}{x} = 0 \Longrightarrow \lambda=\text{const} \\
+  \lambda(T) &= \pder{\Psi\trans}{x} = x(T) \Longrightarrow \lambda(t) = x(T) \ \forall t \\
+               \shortintertext{Now, let's find $u$ by minimizing $H$. Assume $|u|<1$ (no constraints active), so $\mu_1=\mu_2=0$. Then,}
+  \pder{\widetilde H}{u} &= u + \lambda\trans g = 0 \Longrightarrow u(t) = -x\trans(T) g(t), \\
+  \shortintertext{as long as $|x\trans(T)g(t)|<1$. Assume $u=-1$, so $\mu_1=0$ and $\mu_2\ge0$. Then,}
+  \pder{\widetilde H}{u} &= u + \lambda\trans g - \mu_2 = 0 \\
+    & x\trans(T) g(t) = \mu_2 + 1 \ge 1 \\
+  \shortintertext{We get a similar results assuming $u=1$. The optimal control law is}
+  u(t) &= \begin{dcases}
+    -x\trans(T)g(t), & |x\trans(T)g(t)| < 1 \\
+    -1, & x\trans(T)g(t) \ge 1 \\
+    +1, & x\trans(T)g(t) \le -1
+  \end{dcases} \\
+  u(t) &= -\mathop\text{Sat}(x\trans(T)g(t)) \\
+  \shortintertext{where}
+  \mathop\text{Sat}(\xi) &= \begin{dcases}
+    \xi, & |\xi| \le 1 \\
+    \sign(\xi), & \text{otherwise}
+  \end{dcases}
+\end{align}
+Problem: we don't know $x(T)$! We have to solve this numerically through
+\begin{gather}
+  x(t) = x(0) + \int_0^t \dot x(\tau)\dif\tau \\
+  x(T) = x_0 - \int_0^T g(t) \mathop\text{Sat}\big(x\trans(T)g(t)\big) \dif t
+\end{gather}
+
+\paragraph{Example} \mbox{}
+\begin{align}
+  \min_u {} & \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  \text{s.t. } & \dot x = f(x,u,t), \quad x(0)=x_0 \\
+            & h(x,u,t) = 0\ \forall t
+\end{align}
+\begin{align}
+  \widetilde H &= L + \lambda\trans f + \mu\trans h \\
+  \dot\lambda &= -\pder{\widetilde H\trans}{x} = -\pder{L\trans}{x} - \pder{f\trans}{x}\lambda - \pder{h\trans}{x}\mu \\
+  \lambda(T) &= \pder{\Psi\trans}{x}(x(T)) \\
+  \pder{\widetilde H}{u} &= 0 \\
+  h &= 0
+\end{align}
+
+\paragraph{Example} \mbox{}
+\begin{align}
+  \min_u {} & \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
+  \text{s.t. } & \dot x = f(x,u), \quad x(0)=x_0 \\
+            & h(x) = 0
+\end{align}
+Problem: We need a constraint involving $u$. First, we need $h(x_0)=0$; otherwise we have no chance. Then, if
+\begin{gather}
+  \frac{\dif}{\dif t} h(x(t)) = \pder{h}{x} \dot x = \pder{h}{x} f(x,u) = 0,
+\end{gather}
+we have $h(x(t))=0$ $\forall t$. This derivative is the Lie derivative of $h$ along $f$ ($L_f h=(\partial h/\partial x)f$).
+\begin{gather}
+  \widetilde H = L + \lambda\trans f + \mu\trans \pder{h}{x} f
+\end{gather}
+Problem: $(\partial h/\partial x)f$ is not guaranteed to have $u$ in it, e.g.
+\begin{gather}
+  h = x_1, \quad f=\begin{bmatrix}
+    17 x_2 \\ \sin(x_1) u
+  \end{bmatrix} \\
+  \pder{h}{x} f = \begin{bmatrix}
+    1 & 0
+  \end{bmatrix}
+  \begin{bmatrix}
+    17 x_2 \\ \sin(x_1) u
+  \end{bmatrix}
+  = 17 x_2
+\end{gather}
+So, we keep taking derivatives until $u$ shows up. (If $u$ never shows up, then the control has no effect on the state.)
+
+\section{A Look Forward}
+So far, we found $u(t)$ over the horizon $[0,T]$. This is, in general, not robust. We need to know $f$ exactly. We also need to know $x(0)$. What to do?
+
+There are three paths forward:
+\begin{enumerate}
+\item If we're super lucky, we get $u(x,t)$ directly from PMP, like in the bang-bang example with switching surfaces.
+\item Go from PMP to LQ (linear system, quadratic cost). This is used a lot.
+\item Use Model-Predictive Control (MPC). In this, at time $t_c$ (current time), we are at state $x_c$. We solve an optimal control problem:
+  \begin{align}
+    \min_u {} & \int_{t_c}^{\mathrlap{t_c+\Delta T}} L(x,u,t)\dif t + \Psi(x(t_c+\Delta T)) \\
+    \text{s.t. } & \dot x = f(x,u,t) \\
+              & x(t_c) = x_c
+  \end{align}
+  where $\Delta T$ is the prediction horizon. This problem can be solved using PMP, producing $u(t)$, $t\in[t_c,t_c+\Delta T]$. Instead of using $u(t)$, only use $u(t_c)$ at time $t_c$. This control solution depends on $x_c$, so we really have a feedback law $u(x_c,t_c)$. (In practice, we use $u(x_c,t_c)$ over a small interval of length $\delta$.) Then, we resolve the optimal control problem.
+
+  The features of MPC are
+  \begin{enumerate}[nosep]
+  \item Turns open-loop into closed-loop
+  \item Used a lot
+  \item Requires computation, but once a solution is found, it can be reused as initial conditions\dots
+  \item Use with caution! A solution may be optimal over $[t_c,t_c+\Delta T]$ but it may still be bad (unstable) over $[t_c,\infty)$.
+  \end{enumerate}
+\end{enumerate}
 
 %%% Local Variables:
 %%% mode: latex
