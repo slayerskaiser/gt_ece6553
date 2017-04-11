@@ -1,0 +1,131 @@
+\chapter{Linear-Quadratic Control}
+
+% 2017/03/28
+\section{Towards Global Optimal Control}
+Consider a discrete-time system
+\begin{gather}
+  x_{k+1} = F(x_k,u_k),
+\end{gather}
+where $x_k$ is the state at time $k$ and $u_k$ is the input at time $k$.
+
+Let $c(x_k,u_k)\in\R$ be the cost associated with doing $u_k$ at $x_k$.
+
+Let $u=u_0,u_1,\dots,u_{N-1}$ and assume $x_0$ is given. The total cost over $N$ steps using $u$ is
+\begin{gather}
+  V_N^u(x_0) = \sum_{k=0}^{N-1} c(x_k,u_k) + \Theta(x_N),
+\end{gather}
+where $\Theta(x_N)$ is the terminal cost.
+
+Assume we've found the \emph{globally} minimizing $u^*$. The best path over $N$ steps is represented by the figure below.
+\begin{center}
+  \begin{tikzpicture}
+    \node [dot] (x0) at (0,0) {};
+    \node [dot] (x1) at (1,0.2) {};
+    \node [dot] (x2) at (2,0.3) {};
+    \node [dot] (x3) at (3,1) {};
+    \node [dot] (x4) at (4,-0.5) {};
+    \node [dot] (x5) at (5,0.6) {};
+    \node [dot] (xN) at (6,0.4) {};
+
+    \node [below] at (x0) {$x_0$};
+    \node [below] at (x1) {$x_1$};
+    \node [below] at (x2) {$x_2$};
+    \node [below] at (xN) {$x_N$};
+
+    \draw [->] (x0) to[bend left] (x1);
+    \draw [->] (x1) to[bend right] (x2);
+    \draw [->] (x2) to[bend left] (x3);
+    \draw [->] (x3) .. controls (3.8,1) and (3.2,-0.5) .. (x4);
+    \draw [->] (x4) .. controls (4.5,-0.5) and (4.2,0.5) .. (x5);
+    \draw [->] (x5) to[bend left] (xN);
+
+    \draw [->,dashed] (x1) to[out=55,in=125] ($(xN)+(0,0.1)$);
+  \end{tikzpicture}
+\end{center}
+Consider the dashed path. There is no way this path is better from $x_1$ to $x_N$ using $N-1$ steps. Therefore, the solid path from $x_1$ to $x_N$ is the best path over $N-1$ steps.
+
+\clearpage
+\begin{framed}
+  \begin{defi}[Bellman's Principle of Optimality]
+    Let $u^*$ be optimal, with corresponding state sequence $x^*$.
+    \begin{align}
+      V^*_N(x_0) &= \sum_{k=0}^{N-1} c(x_k^*,u_k^*) + \Theta(x_N^*) \\
+      &= c(x_0,u^*_0) + \sum_{k=1}^{N-1} c(x_k^*,u_k^*) + \Theta(x_N^*) \\
+      &= c(x_0,u^*_0) + V^*_{N-1}(x_1^*) \\
+      V^*_N(x) &= c(x,u^*_0) + V^*_{N-1}\big(F(x,u_0^*)\big)
+    \end{align}
+    Equivalently,
+    \begin{gather}
+      V^*_N(x) = \min_u \Big\{ c(x,u) + V^*_{N-1}\big(F(x,u)\big) \Big\}
+    \end{gather}
+  \end{defi}
+\end{framed}
+
+\begin{thm}[Bellman's Equation]
+  The optimal cost-to-go satisfies
+  \begin{gather}
+    \begin{dcases}
+      V^*_k(x) = \min_u \Big\{ c(x,u) + V^*_{k-1}\big(F(x,u)\big) \Big\}, & k=1,\dots,N \\
+      V^*_0(x) = \Theta(x)
+    \end{dcases}
+  \end{gather}
+\end{thm}
+
+What does this have to do with optimal control? We need to reformulate the cost function $J$ in an analogous manner. Let
+\begin{gather}
+  J^*(x_t,t) = \int_t^T L(x^*(s),u^*(s))\dif s + \Psi(x^*(T)),
+\end{gather}
+where $x^*(t)=x_t$, $u^*$ is \emph{globally} optimal, and $\dot x^*=f(x^*,u^*)$. $J^*(x_t,t)$ is the optimal cost-to-go over $[t,T]$ starting at $x_t$. Let's discretize time with sample time $\Delta t$.
+\begin{align}
+  J^*(x_t,t) &= \int_t^{t+\Delta t} L(x^*(s),u^*(s))\dif s + \int_{t+\Delta t}^T L(x^*(s),u^*(s))\dif s + \Psi(x^*(T)) \\
+  &= \int_t^{t+\Delta t} L(x^*(s),u^*(s))\dif s + J^*(x^*_{t+\Delta t},t+\Delta t)
+\end{align}
+Note $x^*_{t+\Delta t}=x_t + f(x_t,u^*(t))\Delta t + o(\Delta t)$. Also, assume $u^*$ is constant over $[t,t+\Delta t]$.
+\begin{gather}
+  \int_t^{t+\Delta t} L(x^*(s),u^*_t)\dif s = \Delta t L(x_t,u^*_t) + o(\Delta t) \\
+  \begin{aligned}
+    \because J^*(x_t,t) &= \Delta t L(x_t,u^*_t) + J^*\big(x_t+\Delta t f(x_t,u^*_t),t+\Delta t\big) + o(\Delta t) \\
+    J^*(x,t) &= \min_u \Big\{ \Delta t L(x,u) + J^*\big(x+\Delta t f(x,u),t+\Delta t\big) \Big\} + o(\Delta t)
+  \end{aligned}
+\end{gather}
+Hence $J^*(x,t)\sim V_k^*(x)$ and $\Delta tL(x,u)\sim c(x,u)$. Also, $J^*(x,T)=\Psi(x)$, so $\Psi\sim\Theta$.
+
+Bellman's equation produces
+\begin{align}
+  J^*(x,t) &= \min_u \Big\{ \Delta t L(x,u) + J^*\big(x+\Delta t f(x,u),t+\Delta t\big) \Big\} + o(\Delta t), \\
+           & \hspace{6cm} t=0,\Delta t,2\Delta t,\dots,T-\Delta t \\
+  J^*(x,T) &= \Psi(x)
+\end{align}
+But we need this in continuous time. Taylor expansion produces
+\begin{gather}
+  J^*\big(x+\Delta t f(x,u),t+\Delta t\big) = J^*(x,t) + \pder{J^*(x,t)}{x}\Delta tf(x,u) + \pder{J^*(x,t)}{t}\Delta t + o(\Delta t) \\
+  J^*(x,t) = \min_u \left\{ \Delta t L(x,u) + J^*(x,t) + \pder{J^*(x,t)}{x}\Delta tf(x,u) + \pder{J^*(x,t)}{t}\Delta t \right\} + o(\Delta t) \\
+  J^*(x,t) - J^*(x,t) - \pder{J^*(x,t)}{t}\Delta t = \min_u \left\{ \Delta t L(x,u) + \pder{J^*(x,t)}{x}\Delta tf(x,u) \right\} + o(\Delta t) \\
+  \intertext{Dividing both sides by $\Delta t$ and taking the limit as $\Delta t\to0$,}
+  -\pder{J^*(x,t)}{t} = \min_u \left\{ L(x,u) + \pder{J^*(x,t)}{x} f(x,u) \right\}
+\end{gather}
+This is known as the Hamilton-Jacobi-Bellman (HJB) equation.
+
+\begin{thm}
+  $u^*$ is a global minimizer to
+  \begin{align}
+    & \min_u \int_0^T L(x,u)\dif t + \Psi(x(T)) \\
+    & \text{s.t. } \dot x=f(x,u)
+  \end{align}
+  if and only if $u^*$ solves the HJB equation
+  \begin{gather}
+    -\pder{J^*(x,t)}{t} = \min_u \left\{ L(x,u) + \pder{J^*(x,t)}{x} f(x,u) \right\}, \quad t\in[0,T) 
+  \end{gather}
+  and $J^*(x,T)=\Psi(T)$.
+\end{thm}
+
+Note:
+\begin{enumerate}[nosep]
+\item The HJB equation is a partial differential equation (PDE) rather than an ODE (hard to solve in general).
+\item It is solvable when we have linear dynamics and quadratic costs (LQ).
+\end{enumerate}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../notes"
+%%% End:

@@ -1777,8 +1777,8 @@ with radius $P/2\alpha$. (This produces the semi-circular city of Carthage!)
     \draw [thick] (\x,-0.2) -- (\x,0.2) node [above,xshift=-2pt] {$\a$};
 
     \node [dot] at (0,-1) {};
-    \draw [dashed] (0,-1) circle ({veclen(2,1)});
-    \draw (2,0) arc (atan(1/2):180-atan(1/2):{veclen(2,1)});
+    \draw [dashed] (0,-1) circle (veclen(2,1));
+    \draw (2,0) arc (atan(1/2):180-atan(1/2):veclen(2,1));
   \end{tikzpicture}
 \end{center}
 \emph{Note that this formulation cannot handle $P>\pi a$. In reality, $a$ is also undefined and chosen so that the solution is exacty a semicircle with $P=\pi a$.}
