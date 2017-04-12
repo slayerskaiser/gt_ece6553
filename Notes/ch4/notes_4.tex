@@ -109,14 +109,18 @@ This is known as the Hamilton-Jacobi-Bellman (HJB) equation.
 \begin{thm}
   $u^*$ is a global minimizer to
   \begin{align}
-    & \min_u \int_0^T L(x,u)\dif t + \Psi(x(T)) \\
+    & \min_u \int_0^T L(x,u,t)\dif t + \Psi(x(T)) \\
     & \text{s.t. } \dot x=f(x,u)
   \end{align}
   if and only if $u^*$ solves the HJB equation
   \begin{gather}
-    -\pder{J^*(x,t)}{t} = \min_u \left\{ L(x,u) + \pder{J^*(x,t)}{x} f(x,u) \right\}, \quad t\in[0,T) 
+    -\pder{J^*(x,t)}{t} = \min_u \left\{ L(x,u) + \pder{J^*(x,t)}{x} f(x,u) \right\}, \quad t\in[0,T),
   \end{gather}
-  and $J^*(x,T)=\Psi(T)$.
+  where $J^*(x,T)=\Psi(T)$,
+  \begin{gather}
+    J^*(x_t,t) = \int_t^T L(x^*(s),u^*(s),s)\dif s + \Psi(x^*(T)),
+  \end{gather}
+  $x^*(t)=x_t$, and $\dot x^*=f(x^*,u^*,t)$.
 \end{thm}
 
 Note:
@@ -124,6 +128,115 @@ Note:
 \item The HJB equation is a partial differential equation (PDE) rather than an ODE (hard to solve in general).
 \item It is solvable when we have linear dynamics and quadratic costs (LQ).
 \end{enumerate}
+
+% 2017/03/30
+\section{Linear-Quadratic Problems}
+\begin{align}
+  \min_u {} & \frac12 \int_0^T \Big[ x\trans(t)Q(t)x(t) + u\trans(t)R(t)u(t) \Big] \dif t + \frac12 x\trans(T)Sx(T), \\
+            & \hspace{2cm} Q(t)=Q\trans(t) \succeq 0,\ S=S\trans \succeq 0,\ R(t)=R\trans(t)\succ 0 \\
+  \text{s.t. } & \dot x(t) = A(t)x(t) + B(t)u(t) \\
+            & x(0) = x_0
+\end{align}
+HJB states
+\begin{align}
+  -\pder{J^*}{t} &= \min_u \left\{ \frac12 x\trans Qx + \frac12 u\trans Ru + \pder{J^*}{x}(Ax+Bu) \right\} \\
+  J^*(x,T) &= \frac12 x\trans Sx
+\end{align}
+Minimizing the first equation with respect to $u$ produces
+\begin{align}
+  \pder{\{\cdot\}}{u} ={} & u\trans R + \pder{J^*}{x} B = 0 \\
+                          & Ru + B\trans \pder{J^*{}\trans}{x} = 0 \\
+                          & u = -R^{-1} B\trans \pder{J^*{}\trans}{x} \\
+  \pder{^2 \{\cdot\}}{u^2} ={} & R \succ 0 \Rightarrow \text{$u^*$ is the global minimizer}
+\end{align}
+Going back to HJB,
+\begin{align}
+  -\pder{J^*}{t} &= \frac12 x\trans Qx + \frac12 \pder{J^*}{x}BR^{-1} R R^{-1}B\trans\pder{J^*{}\trans}{x} + \pder{J^*}{x}Ax - \pder{J^*}{x}BR^{-1}B\trans\pder{J^*{}\trans}{x} \\
+                 &= \frac12 x\trans Qx + \pder{J^*}{x}Ax - \frac12 \pder{J^*}{x}BR^{-1}B\trans\pder{J^*{}\trans}{x}
+\end{align}
+We still have a PDE to solve. Note $J^*(x,T)=\frac12 x\trans Sx$. Maybe $J^*(x,t)=\frac12 x\trans P(t) x$ for some $P(t)=P\trans(t)\succeq 0$. Let's try:
+\begin{gather}
+  \begin{aligned}
+    \pder{J^*}{t} &= \frac12 x\trans \dot P x \\
+    \pder{J^*}{x} &= x\trans P
+  \end{aligned} \\
+  \begin{aligned}
+    -\frac12 x\trans \dot P x &= \frac12 x\trans Q x + x\trans PAx - \frac12 x\trans PBR^{-1}B\trans Px \\
+    &= \frac12 x\trans \Big( Q + 2PA - PBR^{-1}B\trans P \Big) x
+  \end{aligned}
+\end{gather}
+Note $x\trans PAx\in\R$ so $x\trans PAx = x\trans A\trans Px = \frac12 x\trans A\trans Px + \frac12 x\trans PAx = \frac12 x\trans (A\trans P + PA)x$.
+\begin{gather}
+  \Longrightarrow -\frac12 x\trans \dot P x = \frac12 x\trans \Big( Q + PA + A\trans P - PBR^{-1}B\trans P \Big) x
+\end{gather}
+This has to hold for all $x$, i.e. $P$ satisfies
+\begin{gather}
+  \begin{dcases}
+    \dot P = - Q - PA - A\trans P + PBR^{-1}B\trans P \\
+    P(T) = S
+  \end{dcases}
+\end{gather}
+This is known as the differential Riccati equation (RE/DRE). Luckily for us, we can actually solve RE ``analytically'' (almost if $A,B,R,Q$ depend on $t$, and completely if they do not).
+
+\begin{thm}
+  The optimal control is $u^* = -R^{-1}B\trans P(t) x$, where $P(t)=P\trans(t)\succeq 0$ solves the RE.
+\end{thm}
+
+\paragraph{Example} Scalar example posted on T-square:
+\begin{align}
+  \min {} & \int_0^1 (qx^2 + ru^2)\dif t + sx^2(1), \quad q,s\ge 0,\ r>0 \\
+  \text{s.t. } & \dot x = ax + bu, \quad x,u\in\R
+\end{align}
+\begin{align}
+  u &= -R^{-1}B\trans Px = -\frac{bp}{r} x \\
+  \dot p &= -q - 2ap + \frac{b^2}{r}p^2 \\
+  p(1) &= s
+\end{align}
+
+How do we solve the RE?
+\begin{align}
+  \dot x &= Ax + Bu = \underbrace{(A-BR^{-1}B\trans P)}_{N(t)} x \\
+  x(t) &= \Phi(t,0) x(0) = \Phi(t,T) x(T),
+\end{align}
+where $\Phi$ is the state transition matrix. Note this is also the zero-input response.
+
+Let $X(t)=\Phi(t,T)\in\R^{n\times n}$. We know from ECE 6550 that
+\begin{align}
+  \dot X &= (A-BR^{-1}B\trans P) X \\
+  X(T) &= \mathrm{I}
+\end{align}
+Let $Y=PX$. Then,
+\begin{align}
+  \dot Y &= \dot P X + P \dot X \\
+         &= \Big( -Q - A\trans P - PA + PBR^{-1}B\trans P \Big) X + P \Big( A - BR^{-1}B\trans P \Big) X \\
+         &= -Q X - A\trans Y \\
+  Y(T) &= S \\
+  \Longrightarrow &
+  \begin{dcases}
+    \dot X = AX - BR^{-1}B\trans Y \\
+    \dot Y = -QX - A\trans Y \\
+    X(T) = \mathrm{I} \\
+    Y(T) = S
+  \end{dcases}
+\end{align}
+Note that $P=YX^{-1}$, where $X$ is always invertible since it is a state transition matrix.
+
+Assume that $A,B,Q,R$ do not depend on time. Then,
+\begin{align}
+  \begin{bmatrix}
+    \dot X \\ \dot Y
+  \end{bmatrix} &= \underbrace{ \begin{bmatrix}
+    A & -BR^{-1}B\trans \\ -Q & -A\trans
+  \end{bmatrix} }_{M\in\R^{2n\times 2n}} \begin{bmatrix}
+    X \\ Y
+  \end{bmatrix} \\
+  \begin{bmatrix}
+    X(t) \\ Y(t)
+  \end{bmatrix} &= e^{M(t-T)} \begin{bmatrix}
+    \mathrm{I} \\ S
+  \end{bmatrix}
+\end{align}
+We've traded a quadratic $n\times n$ ODE for a linear $2n\times 2n$ ODE!
 
 %%% Local Variables:
 %%% mode: latex
