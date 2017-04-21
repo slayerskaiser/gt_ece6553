@@ -1,6 +1,156 @@
 \chapter{Global Methods}
 
 % 2017/04/18
+\section{Hamilton-Jacobi Theory}
+Recall the HJB theorem: $u^*$ is the global minimizer to
+\begin{gather}
+  \int_0^T L(x,u)\dif t + \Psi(x(T))
+\end{gather}
+s.t.\ $\dot x=f(x,u)$ if it solves
+\begin{align}
+  & -\pder{J^*}{t} = \min_u \left\{ L(x,u) + \pder{J^*}{x} f(x,u) \right\} \label{eq:hjb} \\
+  & J^*(x,T) = \Psi(x)
+\end{align}
+where $J^*(x,t)$ is the optimal cost-to-go from $t$ to $T$ starting at $x$.
+
+\subsection{Relating HJB to PMP}
+Note that the term within the curly brackets on the right-hand side of \eqref{eq:hjb} is a Hamiltonian:
+\begin{gather}
+  H(x,u,\lambda) = L(x,u) + \lambda\trans f(x,u)
+\end{gather}
+with the odd choice of $\lambda=\partial J^*{}\trans(x,t)/\partial x$.
+
+From Pontryagin, $u^*=\min_u H(x,u,\lambda)$ (locally). However, the minimization in \eqref{eq:hjb} is global. What if we insisted on a global minimizer $u^*$?
+
+\begin{defi}
+  The Hamiltonian $H(x,u,\lambda)$ is \emph{regular} if, for every $x,\lambda$, there is a unique global minimizer $u^*(x,\lambda)$, i.e.\
+  \begin{gather}
+    H(x,u^*(x,\lambda),\lambda) < H(x,u,\lambda) \quad \forall u\neq u^*(x,\lambda).
+  \end{gather}
+\end{defi}
+
+From HJB, we know that we should pick $\lambda=\partial J^*{}\trans(x,t)/\partial x$. Assuming $H$ is regular, we should use
+\begin{gather}
+  u^*\left(x,\pder{J^*{}\trans}{x}\right).
+\end{gather}
+PMP states we should find $\lambda$ from
+\begin{align}
+  & \dot \lambda = -\pder{H\trans}{x}, \\
+  & \lambda(T) = \pder{\Psi}{x}(x(T)).
+\end{align}
+Hamilton-Jacobi (HJ) states we should get our new ``costate'' $\partial J^*/\partial x$ from a ``modified'' HJB:
+\begin{gather}
+  \min_u \left\{ L(x,u) + \pder{J^*}{x} f(x,u) \right\} = \min_u \left\{ H\left(x,u,\pder{J^*{}\trans}{x}\right) \right\} = H\Bigg( x, u^*\left(x,\pder{J^*{}\trans}{x}\right), \pder{J^*{}\trans}{x} \Bigg).
+\end{gather}
+HJ is preferable to HJB because it makes statements about $u^*$ (directly) rather than $J^*$.
+
+\begin{thm}[Hamilton-Jacobi]
+  If $H$ is regular and $J^*(x,t)$ satisfies the HJ equation
+  \begin{gather}
+    \begin{dcases}
+      -\pder{J^*}{t} = H\Bigg( x, u^*\left(x,\pder{J^*{}\trans}{x}\right), \pder{J^*{}\trans}{x} \Bigg) \\
+      J^*(x,T) = \Psi(x)
+    \end{dcases}
+  \end{gather}
+  then
+  \begin{gather}
+    u^*\left(x,\pder{J^*{}\trans}{x}\right).
+  \end{gather}
+  is the global optimal solution.
+\end{thm}
+
+\paragraph{Example} \mbox{}
+\begin{align}
+  \min_u {} & \int_0^1 2u^2(t)\dif t + (x(1)-1)^2 \\
+  \text{s.t. } & \dot x = u,\quad x,u\in\R
+\end{align}
+This is almost LQ except for the wrong terminal condition.
+\begin{align}
+  H &= 2u^2 + \lambda u \\
+  \pder{H}{u} &= 4u + \lambda \\
+  \pder{^2 H}{u^2} &= 4 > 0,
+\end{align}
+so $H$ is strictly convex in $u$, and $H$ is regular. By HJ,
+\begin{align}
+  u^*(x,\lambda) = -\frac{\lambda}{4}
+\end{align}
+Replace $\lambda$ with $\partial J^*/\partial x$ and plug into the HJ equation:
+\begin{align}
+  -\pder{J^*}{t} &= H\Bigg( x, u^*\left(x,\pder{J^*{}\trans}{x}\right), \pder{J^*{}\trans}{x} \Bigg) \\
+                 &= 2 \underbrace{\left( -\frac{\partial J^*/\partial x}{4} \right)^2}_{u^2} + \underbrace{\pder{J^*}{x}}_{\lambda} \cdot \underbrace{\left( -\frac{\partial J^*/\partial x}{4} \right)}_{u} \\
+                 &= \frac{(\partial J^*/\partial x)^2}{8} - \frac{(\partial J^*/\partial x)^2}{4} = -\frac{1}{8} \left(\pder{J^*}{x}\right)^2 \\
+  \pder{J^*}{t} &= \frac{1}{8} \left(\pder{J^*}{x}\right)^2 \\
+  J^*(x,1) &= (x-1)^2
+\end{align}
+What is $J^*(x,t)$? A standard trick is to assume separability, i.e.\
+\begin{gather}
+  J^*(x,t) = F_1(x) F_2(t).
+\end{gather}
+Then,
+\begin{gather}
+  F_1(x) F_2'(t) = \frac{1}{8} [F_1'(x) F_2(t)]^2 = \frac{1}{8} [F_1'(x)]^2 F_2^2(t).
+\end{gather}
+We have $[F_1'(x)]^2\sim F_1(x)$, so $F_1(x)$ is probably quadratic in $x$. We also have $F_2'(t)\sim F_2^2(t)$, so $F_2(t)$ is probably $\sim 1/t$. Let's try
+\begin{align}
+  J^*(x,t) &= \frac{ax^2 + bx + c}{\alpha t + \beta}. \\
+  \shortintertext{Then,}
+  \pder{J^*}{x} &= \frac{2ax + b}{\alpha t + \beta} \\
+  \left(\pder{J^*}{x}\right)^2 &= \frac{4a^2x^2 + 4abx + b^2}{(\alpha t + \beta)^2} \\
+  \pder{J^*}{t} &= -\alpha \frac{ax^2 + bx + c}{(\alpha t + \beta)^2}
+\end{align}
+The HJ equation is then
+\begin{align}
+  0 &= \pder{J^*}{t} - \frac{1}{8} \left(\pder{J^*}{x}\right)^2 \\
+    &= \frac{-\alpha(ax^2 + bx + c)}{(\alpha t + \beta)^2} - \frac{1}{8} \frac{4a^2x^2 + 4abx + b^2}{(\alpha t + \beta)^2} \\
+    &= \bigg(\alpha a + \frac12 a^2\bigg) x^2 + \bigg(\alpha b + \frac12 ab\bigg) x + \bigg(\alpha c + \frac18 b^2\bigg)
+\end{align}
+This gives us two equations and five unknowns:
+\begin{alignat}{2}
+  x^2:\ & \alpha a + \frac12 a^2 = 0 & \qquad & \alpha = -\frac12 a \quad \text{(or $a=0$)} \\
+  x^1:\ & \alpha b + \frac12 ab = 0 && \alpha = -\frac12 a \quad \text{(or $b=0$)} \\
+  x^0:\ & \alpha c + \frac18 b^2 = 0
+\end{alignat}
+We also need to consider the boundary conditions:
+\begin{gather}
+  J^*(x,1) = (x-1)^2 \\
+  \frac{ax^2 + bx + c}{\alpha + \beta} = x^2 - 2x + 1 \\
+  \begin{aligned}
+    x^2:\ & \frac{a}{\alpha+\beta} = 1 \\
+    x^1:\ & \frac{b}{\alpha+\beta} = -2 \\
+    x^0:\ & \frac{c}{\alpha+\beta} = 1
+  \end{aligned}
+\end{gather}
+This gives us three additional equations, making for five equations and five unknowns. The solution is
+\begin{gather}
+  \begin{dcases}
+    a = 2 \\
+    b = -4 \\
+    c = 2 \\
+    \alpha = -1 \\
+    \beta = 3
+  \end{dcases} \\
+  J^*(x,t) = \frac{2x^2 - 4x + 2}{-t + 3} = 2 \frac{(x-1)^2}{3-t} \\
+  u^* = -\frac{\partial J^*/\partial x}{4} \\
+  \boxed{u^* = \frac{1-x}{3-t}}
+\end{gather}
+This is the globally optimal solution!
+
+This problem could have been solved by turning it into an LQ problem. We need to turn the terminal cost from $(x(1)-1)^2$ into $\hat x(1)^2$. Let $\hat x=x-1$, so $\dot{\hat x}=\dot x=u$. Then, the problem becomes
+\begin{align}
+  \min_u {} & \int_0^1 2u^2\dif t + \hat x^2(1) \\
+  \text{s.t. } & \dot{\hat x}=u \\
+            & \hat x(0) = x_0 - 1
+\end{align}
+The optimal controller is
+\begin{gather}
+  u = -R^{-1} B\trans P \hat x = -\frac12 (x-1) p(t),
+\end{gather}
+where
+\begin{align}
+  \dot p &= -A\trans P - PA - Q + PBR^{-1}B\trans P \\
+  \dot p &= \frac{p^2}{2} \\
+  p(1) &= 1
+\end{align}
 
 % 2017/04/20
 
