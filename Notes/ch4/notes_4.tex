@@ -690,6 +690,100 @@ But what if $y$ is not just an ``output'' but the actual measured output of the 
 \end{center}
 Here, pole placement can be used to place the eigenvalues of $A-LC$ larger than those of the closed-loop system so the observer $\hat x$ converges quickly to the actual $x$.
 
+% 2017/04/13
+\section[Connections Between Machine Learning and Optimal Control]{Connections Between Machine Learning and Optimal Control\footnote{Not on final.}}
+
+Recall the discrete-time derivation of Bellman's equation. The system was
+\begin{gather}
+  x_{k+1} = F(x_k,u_k)
+\end{gather}
+with cost $c(x_k,u_k)$ for doing $u_k$ at $x_k$. Using $u=u_0,\dots,u_{N-1}$ from $x_0$, the total cost was
+\begin{gather}
+  V_N^u (x_0) = \sum_{k=0}^{N-1} c(x_k,u_k) + \Theta(x_N).
+\end{gather}
+Bellman's equation for the optimal cost-to-go is
+\begin{align}
+  & V_k^* (x) = \min_u \Big\{ c(x,u) + V_{k-1}^* \big( F(x,u) \big) \Big\} \\
+  & V_0^* (x) = \Theta(x),
+\end{align}
+for $k=1,\dots,N$. If we do an infinite-horizon version instead, we would get a \emph{policy} $u = \Pi(x)$, where the control action depends solely on the state and not time. The infinite-horizon cost is
+\begin{gather}
+  V^\Pi (x) = \sum_{k=0}^\infty c(x_k,\Pi(x_k)) \gamma^k,
+\end{gather}
+where $\gamma\in(0,1)$ is the discount. The discount ensures the cost converges. Note there is no step count in the notation $V^\Pi$ and no terminal cost. Bellman's equation for the infinite-horizon case is
+\begin{gather}
+  V^* (x) = \min_u \left\{ c(x,u) + \sum_{k=1}^\infty \gamma^k c\big(x_k,\Pi^*(x_k)\big) \right\}.
+\end{gather}
+Note that
+\begin{align}
+  \sum_{k=1}^\infty \gamma^k c\big(x_k,\Pi^*(x_k)\big) &= \gamma \sum_{k=0}^\infty \gamma^k c\big(x_{k+1},\Pi^*(x_{k+1})\big) \\
+                                                       &= \gamma \sum_{k=0}^\infty \gamma^k c \Big( F\big(x_k,\Pi^*(x_k)\big), \Pi^*\big(F(x_k,\Pi^*(x_k))\big) \Big) \\
+  &= \gamma V^*\big(F(x_0,\Pi^*(x_0)\big)
+\end{align}
+Then, Bellman's infinite horizon equation is
+\begin{gather}
+  V^*(x) = \min_u \Big\{ c(x,u) + \gamma V^*\big(F(x,u)\big) \Big\}.
+\end{gather}
+
+Let's assume we magically had $V^*(x)$. Then
+\begin{gather}
+  \Pi^*(x) = \arg\min_u \Big\{ c(x,u) + \gamma V^*\big(F(x,u)\big) \Big\}.
+\end{gather}
+This works only if we somehow also know $c(x,u)$ and $F(x,u)$ for all $x,u$. The problem is we may not know $c$ and $F$ so we cannot evaluate $\arg\min\{\cdot\}$ even if we knew $V^*(x)\ \forall x$.
+
+What if we were instead given (using magic)
+\begin{gather}
+  W^*(x,u) = c(x,u) + \gamma \min_v W^*\big(F(x,u),v\big).
+\end{gather}
+We can rewrite this as
+\begin{enumerate}
+\item $\min_u W^*(x,u)=V^*(x)$
+\item $\Pi^*(x) = \arg\min_u W^*(x,u)$
+\end{enumerate}
+Note that this is just Bellman's equation. So knowing $W^*(x,u)\ \forall x,u$ (do not need to know $c,F$) is enough for us to know $\Pi^*(x)$! Instead of using magic, we could instead
+\begin{enumerate}[nosep]
+\item use optimal control (last few weeks)
+\item move around in the ``world'', ``experiencing'' the costs as they show up; this is known as \emph{reinforcement learning}
+\end{enumerate}
+
+\subsection{Reinforcement Learning}
+The idea is to move around (randomly) and build up the values in the Q-table. This is a form of reinforcement learning known as Q-learning.
+
+Let's assume (for now) that $X$ ($x\in X$) and $U$ ($u\in U$) are both finite. Let's call $W^*(x,u)=Q(x,u)$.
+
+\begin{algorithm}[H]
+  \caption{Q-learning}
+  \begin{algorithmic}
+    \State $Q_0(x,u)=q_0\ \forall x,u$
+    \State $k=0$
+    \Repeat
+    \State Pick $(x,u)$ ``randomly'' and update the Q-table through
+
+    \hspace{0.5cm} $ Q_k(x,u) = Q_{k-1}(x,u) + \alpha_k \left[ c(x,u) + \gamma \min_v \Big\{ Q_{k-1} \big(F(x,u),v\big) - Q_{k-1}(x,u) \Big\} \right] $
+
+    \State $k=k+1$
+    \Until ``done''
+  \end{algorithmic}
+\end{algorithm}
+
+\noindent
+Note:
+\begin{enumerate}[nosep]
+\item $c(x,u)$ and $F(x,u)$ are ``experienced'', i.e.\ there is no need to know these in advance
+\item $\alpha_k$ is the ``learning rate'' and ``needs'' to satisfy
+  \begin{gather}
+    \sum \alpha_k^2 < \infty, \qquad \sum \alpha_k = \infty
+  \end{gather}
+\item If all $(x,u)$ pairs are visited infinitely many times, then $Q_k(x,u)\to Q(x,u)\ \forall x,u$ as $k\to\infty$.
+\end{enumerate}
+
+\medskip\noindent
+A extension (even for non-finite $X,U$) is to choose a ``fatter'' basis function instead of points. A basis function should have compact support. Examples include sigmoids, wavelets, B-splines, and kernels.
+
+How many basis functions? How to update their amplitudes from the data?
+
+Matlab example \texttt{qlearn} on T-Square.
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../notes"
