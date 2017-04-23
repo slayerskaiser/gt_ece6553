@@ -1,7 +1,7 @@
-\chapter{Global Methods}
+\chapter{Hamilton-Jacobi Theory}
 
 % 2017/04/18
-\section{Hamilton-Jacobi Theory}
+\section{Hamilton-Jacobi: Relating HJB to PMP}
 Recall the HJB theorem: $u^*$ is the global minimizer to
 \begin{gather}
   \int_0^T L(x,u)\dif t + \Psi(x(T))
@@ -13,7 +13,6 @@ s.t.\ $\dot x=f(x,u)$ if it solves
 \end{align}
 where $J^*(x,t)$ is the optimal cost-to-go from $t$ to $T$ starting at $x$.
 
-\subsection{Relating HJB to PMP}
 Note that the term within the curly brackets on the right-hand side of \eqref{eq:hjb} is a Hamiltonian:
 \begin{gather}
   H(x,u,\lambda) = L(x,u) + \lambda\trans f(x,u)
@@ -153,6 +152,154 @@ where
 \end{align}
 
 % 2017/04/20
+\section{The Tracking Problem}
+Given a linear system
+\begin{align}
+  \dot x &= Ax + Bu, \quad x\in\R^n,u\in\R^m \\
+  y &= Cx, \quad y\in\R^p
+\end{align}
+We would like $y(t)=Cx(t)$ to track a reference trajectory $\mu(t)$.
+\begin{center}
+  \begin{tikzpicture}
+    \draw [->,thick] (-0.5,0) -- (4,0);
+    \draw [thick] (0,0.2) -- (0,-0.2) node [below] {$0$};
+    \draw [thick] (3.5,0.2) -- (3.5,-0.2) node [below] {$T$};
+    \draw (0,0.6) .. controls (1,-1) and (2,2) .. (3.5,1) node [right] {$\mu(t)$};
+    \draw [thick,dashed] (0,0.8) .. controls (1.3,-1.2)  and (2,2) .. (3.5,1.2) node [above right] {$y(t)$};
+  \end{tikzpicture}
+\end{center}
+Let the cost be
+\begin{gather}
+  \min_u \frac12 \int_0^T \Big[ (y-\mu)\trans Q (y-\mu) + u\trans Ru \Big]\dif t + \frac12 \big(y(T)-\mu(T)\big)\trans S \big(y(T)-\mu(T)\big),
+\end{gather}
+where $Q=Q\trans \succeq 0$, $R=R\trans \succ 0$, and $S=S\trans \succeq 0$. This looks like a LQ problem, but it is not. (\textbf{Check:} To be a LQ problem, the $B$ matrix needs to be invertible.)
+
+This is a ``classical'' control problem. This can be solved using the HJ equation. Typically, it is difficult to solve the PDE, so instead we will verify a claimed solution.
+
+We claim the optimal solution is
+\begin{gather}
+  u(t) = -R^{-1}B\trans [P(t)x(t) + w(t)],
+\end{gather}
+where $P(t)$ solves the Riccati equation
+\begin{align}
+  \dot P &= -A\trans P - PA - C\trans Q C + PBR^{-1}B\trans P \\
+  P(T) &= C\trans SC
+\end{align}
+and $w(t)$ satisfies
+\begin{align}
+  \dot w &= -(A-BR^{-1}B\trans P)\trans w + C\trans Q \mu \\
+  w(T) &= -C\trans S \mu(T)
+\end{align}
+The optimal cost-to-go is given as
+\begin{gather}
+  J^*(x,t) = \frac12 x\trans P(t) x + w\trans(t) x + v(t)
+\end{gather}
+where
+\begin{align}
+  \dot v &= \frac12 (w\trans BR^{-1}B\trans w - \mu\trans Q\mu) \\
+  v(T) &= \frac12 \mu\trans(T) S \mu(T)
+\end{align}
+Let's verify if the claim is correct using the HJ theorem. Step 1 is to check that the Hamiltonian is regular:
+\begin{gather}
+  H = \frac12 \Big[ (Cx-\mu)\trans Q(Cx-\mu) + u\trans Ru \Big] + \lambda\trans (Ax + Bu) \\
+  \pder{H}{u} = u\trans R + \lambda\trans B = 0 \\
+  \boxed{u^* = -R^{-1}B\trans\lambda} \\
+  \pder{^2 H}{u^2} = R \succ 0,
+\end{gather}
+so $u^*$ is a unique global minimizer ($H$ is regular). Step 2 is to substitute $\lambda\trans=\partial J^*/\partial x$:
+\begin{gather}
+  \pder{J^*}{x} = x\trans P + w\trans \\
+  \lambda = Px + w \\
+  u^* = -R^{-1} B\trans (Px + w),
+\end{gather}
+which matches the claim. Step 3 is to show that this choice of $J^*$ satisfies the theorem. We need to check both the boundary condition and the differential equation. For the boundary condition,
+\begin{align}
+  J^*(x,T) &= \frac12 x\trans P(T) x + w\trans (T) x + v(T) \\
+           &= \frac12 x\trans C\trans SCx - \mu\trans(T) SCx + \frac12 \mu\trans(T) S\mu(T) \\
+           &= \frac12 x\trans C\trans SCx - \frac12 \mu\trans(T) SCx - \frac12 x\trans C\trans S\mu(T) + \frac12 \mu\trans(T) S\mu(T) \\
+           &= \frac12 (Cx-\mu)\trans S (Cx-\mu) = \Psi(x),
+\end{align}
+which matches the claim. For the PDE,
+\begin{gather}
+  -\pder{J^*}{t} = H\bigg( x, u^*\Big(x,\pder{J^*{}\trans}{x}\Big), \pder{J^*{}\trans}{x} \bigg) \\
+  \begin{aligned}
+    \pder{J^*}{t} &= \frac12 x\trans \dot P x + \dot w\trans x + \dot v \\
+    &= \frac12 x\trans \Big( -A\trans P - PA - C\trans Q C + PBR^{-1}B\trans P \Big) x \\
+    & \qquad {} - w\trans \Big( A - BR^{-1}B\trans P \Big) x + \mu\trans QCx + \frac12 \Big( w\trans BR^{-1}B\trans w - \mu\trans Q\mu \Big) \\
+  \end{aligned} \\
+  \begin{aligned}
+    -\pder{J^*}{t} &= \frac12 x\trans \Big( A\trans P + PA + C\trans Q C - PBR^{-1}B\trans P \Big) x \\
+    & \qquad {} + w\trans \Big( A - BR^{-1}B\trans P \Big) x - \mu\trans QCx - \frac12 \Big( w\trans BR^{-1}B\trans w - \mu\trans Q\mu \Big) \\
+  \end{aligned} \label{eq:dJdt_ex}
+\end{gather}
+The Hamiltonian is
+\begin{align}
+  H(x,u,\lambda) &= \frac12 (Cx-\mu)\trans Q(Cx-\mu) + \frac12 u\trans Ru + \lambda\trans (Ax + Bu) \\
+                 &= \frac12 x\trans C\trans QCx - \mu\trans QCx + \frac12 \mu\trans Q\mu + \frac12 \big(w\trans + x\trans P\big) BR^{-1}RR^{-1}B\trans \big(Px + w\big) \\
+                 & \qquad {} + \big(w\trans + x\trans P\big) \big( Ax - BR^{-1}B\trans (Px + w)\big) \\
+  \intertext{Expanding and simplifying the last two terms,}
+  H(x,u,\lambda) &= \frac12 x\trans C\trans QCx - \mu\trans QCx + \frac12 \mu\trans Q\mu - \frac12 w\trans BR^{-1}B\trans w \\
+                 & \qquad {} - \frac12 x\trans PBR^{-1}B\trans Px + w\trans Ax + \underbrace{x\trans PAx}_{\mathclap{(x\trans PAx + x\trans A\trans Px)/2}} - x\trans PBR^{-1}Bw \\
+                 &= \frac12 x\trans \Big( C\trans QC + PA + A\trans P - PBR^{-1}B\trans P \Big) x \\
+                 & \qquad {} w\trans \Big( A - BR^{-1}B\trans P \Big) x - \mu\trans QCx + \frac12 \mu\trans Q\mu - \frac12 w\trans BR^{-1}B\trans w,
+\end{align}
+which matches \eqref{eq:dJdt_ex}, as desired.
+
+\paragraph{Example} Self-driving car---lane changes
+
+\begin{center}
+  \begin{tikzpicture}
+    \draw [->,thick] (-0.5,0) -- (6,0) node [right] {$x$};
+    \draw [->,thick] (0,-0.5) -- (0,3.5) node [above] {$y$};
+    \draw [thick] (1,0.2) -- ++(0,-0.4) node [below] {$a$};
+    \draw [thick] (5,0.2) -- ++(0,-0.4) node [below] {$b$};
+    \draw [thick] (0.2,1) -- ++(-0.4,0) node [left] {$\ell$};
+    \draw [thick] (0.2,2) -- ++(-0.4,0) node [left] {$2\ell$};
+    \draw [thick] (0.2,3) -- ++(-0.4,0) node [left] {$3\ell$};
+    \foreach \y in {1,2,3}
+    \draw [thick,loosely dashed] (0,\y) -- (5.5,\y);
+    \draw (0.5,0.25) rectangle +(1,0.5);
+    \draw (4.5,1.25) rectangle +(1,0.5);
+    \draw [dotted,very thick] (1,0) -- (1,0.5);
+    \draw [dotted,very thick] (0,0.5) node [left] {$\ell/2$} -- (1,0.5);
+    \draw (1,0.5) .. controls (4,0.5) and (2,1.5) .. (5,1.5);
+  \end{tikzpicture}
+\end{center}
+Let the state of the system be
+\begin{gather}
+  x = \begin{bmatrix}
+    p_x \\ p_y \\ v_x \\ v_y
+  \end{bmatrix}.
+\end{gather}
+With input $[u_x,u_y]\trans$, the dynamics are
+\begin{align}
+  \begin{bmatrix}
+    \dot p_x \\ \dot p_y \\ \dot v_x \\ \dot v_y
+  \end{bmatrix} &= \begin{bmatrix}
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1 \\
+    0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0
+  \end{bmatrix} \begin{bmatrix}
+    p_x \\ p_y \\ v_x \\ v_y
+  \end{bmatrix} + \begin{bmatrix}
+    0 & 0 \\
+    0 & 0 \\
+    1 & 0 \\
+    0 & 1
+  \end{bmatrix} \begin{bmatrix}
+    u_x \\ u_y
+  \end{bmatrix} \\
+  \begin{bmatrix}
+    y_{p_x} \\ y_{p_y}
+  \end{bmatrix} &= \begin{bmatrix}
+    1 & 0 & 0 & 0 \\
+    0 & 1 & 0 & 0
+  \end{bmatrix} \begin{bmatrix}
+    p_x \\ p_y \\ v_x \\ v_y
+  \end{bmatrix}
+\end{align}
+On T-Square, the Matlab file \texttt{self\_driving\_car.m} is posted.
 
 %%% Local Variables:
 %%% mode: latex
