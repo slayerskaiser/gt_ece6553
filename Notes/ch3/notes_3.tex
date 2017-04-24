@@ -955,7 +955,7 @@ We know how to solve this! With $u\mapsto u+\varepsilon v$, $x\mapsto x+\varepsi
                   & \Longrightarrow u^*
 \end{align}
 
-\paragraph{Spling to line}
+\paragraph{Spline to line}
 
 \begin{align}
   & \min_u \frac12 \int_0^1 u^2(t) \dif t \\
@@ -1154,7 +1154,7 @@ The optimality conditions are
   \begin{dcases}
     \pder{H}{u} = 0 \\
     \dot\lambda = -\pder{H\trans}{x} \\
-    \lambda(T) = -\pder{\Psi\trans}{x}(x(T)) - \nu\trans_\phi \pder{\phi\trans}{x}(x(T)) \\
+    \lambda(T) = \pder{\Psi\trans}{x}(x(T)) + \nu\trans_\phi \pder{\phi\trans}{x}(x(T)) \\
     \lambda(0) = -\pder{\Theta\trans}{x}(x(0)) - \nu\trans_\xi \pder{\xi\trans}{x}(x(0))
   \end{dcases}
 \]
